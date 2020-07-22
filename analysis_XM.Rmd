@@ -1,0 +1,104 @@
+---
+title: "baipishu"
+author: "marshall ma"
+date: "7/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r tools}
+
+library(ggplot2)
+library(dplyr)
+library(data.table)
+library(readxl)
+library(naniar)
+library(stringr)
+library(maps)
+library(mapdata)
+
+```
+
+
+## Procedure: 
+0. store file in raw data folder, make a copy and rename as "month/date/year_score/text/wjxnum"
+1. replace head column with English variable names (title.csv)
+2. run following R code
+3. remember to check for NA & exclusion criteria
+4. remember to check if health6-11 is correct
+
+```{r import, include=FALSE}
+abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", comment.char="#", encoding = "UTF-8")
+
+head(abc)
+```
+
+```{r filter, include=FALSE}
+#need to filter 
+
+check <- total %>%
+  mutate(
+    #C1 whether there is alternativng pattern
+    #C2, time of 3SD
+    C3_PHQ1 = ifelse(PHQ == 0 & "e" %in% PHQ10, 0, 1),
+    C4_PHQ2 = ifelse(PHQ != 0 & !("e" %in% PHQ10), 0, 1),
+    #C5 age match
+    #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
+    #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
+    #8 29.8 (QLES3) high should correspond to -> 29.6-7 medium to high
+    random = ifelse("a" %in% PHQ10, 1, 0)
+         )
+
+summary(check$random)
+summary(check$C3_PHQ1)
+summary(check$C4_PHQ2)
+head(check$PHQ10)
+dim(total_0716)
+vis_miss(total_0716)
+
+```
+```{r EDA, include=FALSE}
+
+ggplot(total, aes(x = TimeComplete, fill = new_gender)) + geom_histogram(position = "dodge")
+
+
+ggplot(total, aes(x = swls, fill = new_gender)) + geom_histogram(position = "dodge")
+ggplot(total, aes(x = PSS, fill = new_gender)) + geom_histogram(position = "dodge")
+ggplot(total, aes(x = GAD, fill = new_gender)) + geom_histogram(position = "dodge")
+ggplot(total, aes(x = PHQ, fill = new_gender)) + geom_histogram(position = "dodge")
+
+ggplot(total, aes(x = GAD, y = as.factor(Age), fill = new_gender)) + geom_boxplot(position = "dodge")
+
+```
+
+
+
+```{r output, include=FALSE}
+
+loc <- abc %>% select(LocBefore18, LocCurrent)
+
+as.data.frame(table(abc$LocBefore18))
+
+
+data_loc <- as.data.frame(table(abc$LocBefore18_City))[-1,]#分界点是“-”
+library(maps)
+library(mapdata)
+
+data_loc_a <- data_loc %>% 
+  mutate(
+    Province = ifelse(substr(Var1, 3, 3) == "-", str_sub(Var1,1,2), str_sub(Var1,1,3)),
+    City = ifelse(substr(Var1, 3, 3) == "-", str_sub(Var1,4), str_sub(Var1,5))
+         ) %>%
+  select(Province, City, Freq) 
+#%>% summarise(ntotal = sum(Freq))
+
+head(data_loc_a)
+
+as.data.frame(table(abc$LocCurrent))
+
+
+
+
+```

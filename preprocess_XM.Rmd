@@ -1,0 +1,210 @@
+---
+title: "baipishu"
+author: "marshall ma"
+date: "7/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r tools, include=FALSE}
+
+library(ggplot2)
+library(dplyr)
+library(data.table)
+library(readxl)
+library(naniar)
+library(stringr)
+library(maps)
+library(mapdata)
+```
+
+
+## Procedure: 
+0. store file in raw data folder, make a copy and rename as "month/date/year_score/text/wjxnum"
+1. replace head column with English variable names (title.csv)
+2. run following R code
+3. remember to check for NA & exclusion criteria
+4. remember to check if health6-11 is correct
+
+```{r import, include=FALSE}
+
+#import data with "date + format"
+#data_0710_csv <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/test0710/071020.csv", comment.char="#")
+
+#data_0710_x <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/test0710/071020_byscore.xlsx")
+
+data_0719_s <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/test0719/071920_score.xlsx")
+
+
+#streamline into a standard df name
+df <- as.data.frame(data_0719_s)[,-c(283:289)]
+head(df)
+dim(df)
+```
+
+```{r recode, include=FALSE}
+test <- df
+
+#troubleshoot
+#test %>% summarise(var = unique(Consent))
+#which(is.na(test$ServLang))
+#x <- df[1,]
+#x$ServLang
+
+
+#confirmed
+test$TimeComplete = as.numeric(substr(test$TimeComplete,1,nchar(test$TimeComplete)-1))
+
+#Demographics
+test$Degree <- recode_factor(test$Degree, 'b.本科' = 1, 'c.硕士' = 2, 'd.MBA' = 3, 'e.博士' = 4)
+test$Gender <- recode_factor(test$Gender, 'a.男' = 1, 'b.女' = 2, 'c.跨性别者(性别认同为男性)' = 3, 'd.跨性别者(性别认同为女性)' = 4, 'e.其他(请说明)' = 666, 'f.不想回答' = 999)
+test$LocBefore18 <- recode_factor(test$LocBefore18, 'a.中国' = 1, 'b.海外' = 2)
+test$Religion <- recode_factor(test$Religion, 'a.佛教' = 1, 'b.道教' = 2, 'c.伊斯兰教' = 3, 'd.天主教' = 4, 'e.基督教' = 5, 'f.无宗教信仰' = 6, 'g.其他 (请说明)：' = 666, 'h.不想回答' = 999)
+test$SexOrient <- recode_factor(test$SexOrient, 'a.异性恋' = 1, 'b.同性恋' = 2, 'c.双性恋' = 3, 'd.泛性恋' = 4, 'e.无性恋' = 5, 'f.其他(请说明):' = 666, 'g.不想回答' = 999)
+test$Marital <- recode_factor(test$Marital, 'a.单身（无恋爱关系）' = 1, 'b.恋爱中' = 2, 'c.已婚' = 3, 'd.离婚' = 4, 'e.丧偶' = 5, 'f.其他(请说明)：' = 666, 'g.不想回答' = 999)
+test$Living <- recode_factor(test$Living, 'a.单身，独自居住' = 1, 'b.单身，和室友/朋友住在一起' = 2, 'c.同居' = 3, 'd.同城分居' = 4, 'e.异地/异国' = 5, 'f.不想回答' = 999)
+test$Sibling <- recode_factor(test$Sibling, 'a.0' = 0, 'b.1' = 1, 'c.2' = 2, 'd.3' = 3, 'e.4个及以上' = 4) 
+test$Visa <- recode_factor(test$Visa, 'a. 绿卡' = 1, 'b. 学生读书签证' = 2, 'c. 学生签证向实习签证过度中(如：F1 Post-completion OPT)' = 3, 'd. 其他 (请说明)：' = 666)
+test$CityType <- recode_factor(test$CityType, 'a.大都会/大城市市中心' = 1, 'b.大都会/大城市周边区域' = 2, 'c.中小城市' = 3, 'd.小镇/农村' = 4, 'e.其他' = 666)
+test$Work <- recode_factor(test$Work, 'a.全职学生，无工作' = 1, 'b.兼职（校内兼职）' = 2, 'c.兼职（校外兼职）' = 3, 'd.正在找工作' = 4, 'e.其他(请说明)：' = 666)
+test$Grade <- recode_factor(test$Grade, 'a.平均分90分以上' = 1, 'b.平均分80-90' = 2, 'c.平均分60-80' = 3, 'd.平均分60以下' = 4)
+test$GradeChange <- recode_factor(test$GradeChange, 'a.明显变好' = 1, 'b.变好' = 2, 'c.不变' = 3, 'e.变差' = 4, 'e.明显变差' = 5)
+test$GPA <- recode_factor(test$GPA, 'a.3.8以上' = 1, 'b.3.5-3.8' = 2, 'c.3.3-3.5' = 3, 'd.3.0-3.3' = 4, 'e.2.5-3.0' = 5, 'f.2.5以下' = 6, 'g.不想回答' = 999)
+
+test$FamMH <- recode_factor(test$FamMH, 'a.是' = 1, 'b.否' = 2, 'c.感觉有但没有正式确诊' = 3, 'd.不清楚' = 333, 'e.不想回答' = 999, ' (空)' = 999) # (空) also = 不想回答？
+
+test$PHQ10 <- recode_factor(test$PHQ10, 'a. 不困难' = 1, 'b. 有些困难' = 2, 'c. 很困难' = 3, 'd. 非常困难' = 4, 'e. 如27.1-27.9题选择了“完全没有”，请选e跳过此题' = 999) #is e 999 or 6, TBD
+
+
+#SLAVIA
+test$SLASIA1 <- recode_factor(test$SLASIA1, 'a. 几乎只有中国人，华裔美国人，东方人' = 1, 'b. 主要是中国人，华裔美国人，东方人' = 2, 'c. 华人和非华人团体大约相等' = 3, 'd. 非华裔或亚裔的其他群体（如：白人，黑人，西班牙裔等）' = 4, 'e. 几乎全部是西方人，黑人，西班牙裔或其他非华裔团体' = 5) 
+test$SLASIA2 <- recode_factor(test$SLASIA2, 'a. 几乎只有中国人，华裔美国人，东方人' = 1, 'b. 主要是中国人，华裔美国人，东方人' = 2, 'c. 华人和非华人团体大约相等' = 3, 'd. 主要是西方人，黑人，西班牙裔或其他非华裔群体' = 4, 'e. 几乎全部是西方人，黑人，西班牙裔或其他非华裔团体' = 5) 
+test$SLASIA3 <- recode_factor(test$SLASIA3, 'a. 非常自豪' = 4, 'b. 有些自豪' = 4, 'c. 一点点自豪' = 3, 'd. 没有自豪感，但不感到消极' = 2, 'e. 没有自豪感，并对这个群体感到消极' = 1) 
+test$SLASIA4 <- recode_factor(test$SLASIA4, 'a. 主要认同中国文化' = 1, 'b. 排斥/不太认同中国文化' = 2, 'c. 主要认同西方文化' = 3, 'd. 排斥/不太认同西方文化' = 4, 'e. 中西文化都认同' = 5) 
+test$SLASIA5 <- recode_factor(test$SLASIA5, 'a. 近乎全部' = 4, 'b. 大多数' = 4, 'c. 一些' = 3, 'd. 少数' = 2, 'e. 一个都没有' = 1) 
+
+#Service
+test$Service <- recode_factor(test$Service, 'a.是' = 1, 'b.否' = 2) 
+test$ServLang <- recode_factor(test$ServLang, 'a.中文' = 1, 'b.英文' = 2, 'c.双语' = 3, 'd.没有接受过专业心理服务' = 0, 'e.其他' = 666)  #0 means not have this choice
+test$ServLoc <- recode_factor(test$ServLoc, 'a.中国' = 1, 'b.北美' = 2, 'c.中国与北美都有' = 3, 'd.没有接受过专业心理服务' = 0, 'e.其他' = 666)  #0 means not have this choice
+test$ServFut <- recode_factor(test$ServFut, 'a. 是' = 1, 'b. 否' = 2, 'c. 尚在犹豫' = 333)  
+test$ServFut_Yes <- recode_factor(test$ServFut_Yes, 'i. 愿意继续目前正进行的专业帮助' = 1, 'ii. 正在考虑寻求心理咨询' = 2, 'iii. 正在考虑寻求药物治疗' = 3, 'iv. 如果以后有需求，会考虑心理治疗/药物治疗' = 4)  
+test$ServFut_No <- recode_factor(test$ServFut_No, 'i. 我不需要' = 1, 'ii. 不觉得目前的支持有所帮助' = 2, 'iii. 但考虑寻找其他的专业帮助' = 3)  
+
+#Covid
+test$COVID1 <- recode_factor(test$COVID1, 'a.是' = 1, 'b.否' = 0, 'c.有症状但未确诊' = 2, 'd.不确定' = 333)  
+test$COVID2 <- recode_factor(test$COVID2, 'a.是' = 1, 'b.否' = 0, 'c.想看但不敢去看' = 2)  
+test$COVID3 <- recode_factor(test$COVID3, 'a.是' = 1, 'b.否' = 0)  
+
+#Health
+test$Health1 <- recode_factor(test$Health1, '是' = 1, '否' = 0, '不确定' = 333)  
+test$Health2 <- recode_factor(test$Health2, '是' = 1, '否' = 0, '不确定' = 333)  
+test$Health3 <- recode_factor(test$Health3, '是' = 1, '否' = 0, '不确定' = 333)  
+test$Health4 <- recode_factor(test$Health4, '是' = 1, '否' = 0, '不确定' = 333)  
+test$Health5 <- recode_factor(test$Health5, '是' = 1, '否' = 0, '不确定' = 333)  
+test$Health6 <- recode_factor(test$Health6, '是' = 1, '否' = 0, '不确定' = 333) 
+test$Health7 <- recode_factor(test$Health7, '是' = 1, '否' = 0, '不确定' = 333)  
+test$Health8 <- recode_factor(test$Health8, '是' = 1, '否' = 0, '不确定' = 333)  
+test$Health9 <- recode_factor(test$Health9, '是' = 1, '否' = 0, '不确定' = 333)  
+
+#Suicidal
+test$SI1 <- recode_factor(test$SI1, 'a.是' = 1, 'b.否' = 0, 'c.不想回答' = 999)  
+test$SI2 <- recode_factor(test$SI2, 'a.没有' = 1, 'b.偶尔' = 2, 'c.有时' = 3, 'd.经常' = 4, 'e.总是' = 5, 'h.不想回答' = 999)  
+```
+
+```{r aggregation, include=FALSE}
+total <- test %>%
+  mutate(
+    #Part II: demo
+    #challenges abroad
+    Chal_env = Chal1 + Chal3,
+    Chal_home = Chal2,
+    Chal_study = Chal4 + Chal5 + Chal6 + Chal9,
+    Chal_res = Chal7 + Chal8 + Chal14,
+    Chal_relation = Chal10 + Chal11 + Chal12,
+    Chal_racis = Chal13, #racism 
+    
+    #Satisfaction abroad
+    Satis_sum = Satis1 + Satis2 + Satis3 + Satis4 + Satis5 + Satis6,
+    
+    #Part III: PWB
+    #Basic forms
+    PSS_sum = PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6 + PSS7 + PSS8 + PSS9 + PSS10,
+    PHQ_sum = PHQ1 + PHQ2 + PHQ3 + PHQ4 + PHQ5 + PHQ6 + PHQ7 + PHQ8 + PHQ9, 
+    GAD_sum = GAD1 + GAD2 + GAD3 + GAD4 + GAD5 + GAD6 + GAD7, 
+    SCOFF_nervosa = SCOFF1 + SCOFF2 + SCOFF3 + SCOFF4 + SCOFF5,
+    SCOFF_binge = SCOFF6,
+    SWLS_sum = SWLS1 + SWLS2 + SWLS3 + SWLS4 + SWLS5,
+    QLES_sum = QLES1 + QLES2 + QLES3,
+    
+    #Part IV: Latent/Coping
+    ERQ_reap = ERQ1 + ERQ2,
+    ERQ_sup = ERQ3,
+    GSE_sum = GSE1+ GSE2 + GSE3 + GSE4,
+    MEMS = MEMS1 + MEMS2 + MEMS3 + MEMS4, # they are from 2 forms
+    #Social Support
+    SSSI_emo = SSSI1 + SSSI2 + SSSI3 + SSSI4,
+    SSSI_tang = SSSI5 + SSSI6 + SSSI7,
+    SSSI_affec = SSSI8,
+    SSSI_possoc = SSSI9 + SSSI10,
+    SSSI_avg = (SSSI1 + SSSI2 + SSSI3 + SSSI4 + SSSI5 + SSSI6 + SSSI7 + SSSI8 + SSSI9 + SSSI10)/10,
+    
+    #Part V: COVID 
+    COV_Psy_sum = COV_Psy1 + COV_Psy2 + COV_Psy3 + COV_Psy4 + COV_Psy5 + COV_Psy6,
+    COV_Pos_sum = COV_Pos1 + COV_Pos2 + COV_Pos3 + COV_Pos4 + COV_Pos5 + COV_Pos6 + COV_Pos7,
+    COV_Stress_sum = COV_Stress1 + COV_Stress2 + COV_Stress3 + COV_Stress4 + COV_Stress5 + COV_Stress6 + COV_Stress7 + COV_Stress8 + COV_Stress9
+         )
+
+```
+
+```{r filter, include=FALSE}
+#need to filter 
+
+check <- total %>%
+  mutate(
+    #C1 whether there is alternativng pattern
+    #C2, time of 3SD
+    C3_PHQ1 = ifelse(PHQ == 0 & "e" %in% PHQ10, 0, 1),
+    C4_PHQ2 = ifelse(PHQ != 0 & !("e" %in% PHQ10), 0, 1),
+    #C5 age match
+    #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
+    #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
+    #8 29.8 (QLES3) high should correspond to -> 29.6-7 medium to high
+    random = ifelse("a" %in% PHQ10, 1, 0)
+         )
+
+summary(check$random)
+summary(check$C3_PHQ1)
+summary(check$C4_PHQ2)
+head(check$PHQ10)
+dim(total_0716)
+vis_miss(total_0716)
+
+```
+
+
+## Output log
+
+0719 - cleaned recode & matched var name
+0718 - finish aggregation & add recode
+0717 - add aggregation
+0714 - transformed column name
+
+```{r output, include=FALSE}
+
+#today's output
+
+bps_df0719_xm0719_v2 <- total
+write.csv(bps_df0719_xm0719_v2,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", row.names = TRUE)
+
+#write.csv(df,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0710_xm0714.csv", row.names = TRUE)
+
+#testing
+abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", comment.char="#", encoding = "UTF-8")
+
+head(abc)
+
+```
