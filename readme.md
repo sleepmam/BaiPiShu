@@ -7,3 +7,13 @@
 - Name your files with its purpose (such as preprocessing, analysis, visualization, and errands) and your initial/nicknames so to keep our workspace organized. 
 -  DO NOT edit other's code. Please copy chunks of your interest, then paste and edit at your own documents. 
 
+
+
+
+
+### Directory
+
+- preprocess_XM.rmd contains script that preprocesses the original output from WenJuanXin
+- analysis_XM.rmd contains script that produces summary stats, plots, and analysis
+- analysis_XM.html is a knitted document 
+- Resources contains some useful links for those who want to learn more
