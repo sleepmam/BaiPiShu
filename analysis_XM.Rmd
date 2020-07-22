@@ -9,16 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r tools}
-
 library(ggplot2)
 library(dplyr)
 library(data.table)
-library(readxl)
 library(naniar)
 library(stringr)
 library(maps)
 library(mapdata)
-
 ```
 
 
@@ -30,28 +27,29 @@ library(mapdata)
 4. remember to check if health6-11 is correct
 
 ```{r import, include=FALSE}
-abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", comment.char="#", encoding = "UTF-8")
 
-head(abc)
+head(data)
 ```
 
 ```{r filter, include=FALSE}
 #need to filter 
+summary(data$PHQ10)
 
-check <- total %>%
+a <- data %>% select(PHQ_sum, PHQ10)
+head(a)
+check <- data %>%
   mutate(
     #C1 whether there is alternativng pattern
     #C2, time of 3SD
-    C3_PHQ1 = ifelse(PHQ == 0 & "e" %in% PHQ10, 0, 1),
-    C4_PHQ2 = ifelse(PHQ != 0 & !("e" %in% PHQ10), 0, 1),
+    C3_PHQ1 = ifelse(PHQ_sum == 0 & PHQ10 == 999, 0, 1),
+    C4_PHQ2 = ifelse(PHQ_sum != 0 & PHQ10 < 6, 0, 1)
     #C5 age match
     #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
     #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
     #8 29.8 (QLES3) high should correspond to -> 29.6-7 medium to high
-    random = ifelse("a" %in% PHQ10, 1, 0)
          )
 
-summary(check$random)
 summary(check$C3_PHQ1)
 summary(check$C4_PHQ2)
 head(check$PHQ10)
@@ -59,6 +57,8 @@ dim(total_0716)
 vis_miss(total_0716)
 
 ```
+
+
 ```{r EDA, include=FALSE}
 
 ggplot(total, aes(x = TimeComplete, fill = new_gender)) + geom_histogram(position = "dodge")
@@ -75,8 +75,8 @@ ggplot(total, aes(x = GAD, y = as.factor(Age), fill = new_gender)) + geom_boxplo
 
 
 
-```{r output, include=FALSE}
-
+```{r location, include=FALSE}
+#try to do heatmap of china but dataformat might not be ideal...
 loc <- abc %>% select(LocBefore18, LocCurrent)
 
 as.data.frame(table(abc$LocBefore18))
