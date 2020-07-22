@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-```{r tools}
+```{r tools, include=FALSE}
 library(ggplot2)
 library(dplyr)
 library(data.table)
@@ -16,6 +16,7 @@ library(naniar)
 library(stringr)
 library(maps)
 library(mapdata)
+library(arsenal)
 ```
 
 
@@ -32,18 +33,25 @@ data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df
 head(data)
 ```
 
+
+#Stage I: Filtering
+- we still need to work on the inclusion/exclusion criteria
+- ignore at this moment
 ```{r filter, include=FALSE}
 #need to filter 
 summary(data$PHQ10)
 
 a <- data %>% select(PHQ_sum, PHQ10)
+ggplot(a, aes(PHQ_sum, PHQ10))+ geom_point()
+hist(a$PHQ10)
+hist(a$PHQ_sum)
 head(a)
 check <- data %>%
   mutate(
     #C1 whether there is alternativng pattern
     #C2, time of 3SD
-    C3_PHQ1 = ifelse(PHQ_sum == 0 & PHQ10 == 999, 0, 1),
-    C4_PHQ2 = ifelse(PHQ_sum != 0 & PHQ10 < 6, 0, 1)
+    C3_PHQ1 = ifelse(PHQ_sum == 0 & PHQ10 > 6, 0, 1),
+    C4_PHQ2 = ifelse(PHQ_sum > 0 & PHQ10 < 6, 0, 1)
     #C5 age match
     #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
     #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
@@ -53,52 +61,83 @@ check <- data %>%
 summary(check$C3_PHQ1)
 summary(check$C4_PHQ2)
 head(check$PHQ10)
-dim(total_0716)
-vis_miss(total_0716)
+dim(data)
+vis_miss(data)
 
 ```
 
+
+
+```{r summary stats}
+data_vis <- data %>% 
+  mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
+         new_gender = ifelse(Gender == 1, "Male", 
+                      ifelse(Gender == 2, "Female", 
+                      ifelse(Gender < 667, "Spectrum", NA))), 
+         MEMS_sum = MEMS1+ MEMS2 + MEMS3 + MEMS4
+         
+        )
+
+data_vis$Degree
+#Part 0, summary stats PWB
+table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_01, title = "PWB By Age", text = TRUE)
+
+
+table_02 <- tableby(new_gender ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_02, title = "PWB By Gender", text = TRUE)
+
+
+#degree needs to recode back and religion
+table_03 <- tableby(new_gender ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_03, title = "PWB By Degree", text = TRUE)
+
+
+#Part 1, summary stats for latent
+table_11 <- tableby(age_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+summary(table_11, title = "Latent By Age", text = TRUE)
+
+
+table_12 <- tableby(new_gender ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+summary(table_12, title = "Latent By Gender", text = TRUE)
+
+SCOFF_binge
+MEMS1
+
+#Part 2, specifics MEMS and SLASIA
+table_21 <- tableby(age_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_21, title = "spec By Age", text = TRUE)
+
+table_22 <- tableby(new_gender ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_22, title = "spec By Gender", text = TRUE)
+
+```
+
+```{r visulization}
+
+
+#Part I, PHQ
+#1.1 by age
+#ggplot(data_vis, aes(x = PHQ_sum, fill = age_grp)) + geom_histogram(position = "dodge") 
+
+
+#1.2 by gender
+#ggplot(data_vis, aes(x = PHQ_sum, fill = new_gender)) + geom_histogram(position = "dodge") 
+
+
+```
 
 ```{r EDA, include=FALSE}
 
-ggplot(total, aes(x = TimeComplete, fill = new_gender)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = TimeComplete, fill = new_gender)) + geom_histogram(position = "dodge")
 
 
-ggplot(total, aes(x = swls, fill = new_gender)) + geom_histogram(position = "dodge")
-ggplot(total, aes(x = PSS, fill = new_gender)) + geom_histogram(position = "dodge")
-ggplot(total, aes(x = GAD, fill = new_gender)) + geom_histogram(position = "dodge")
-ggplot(total, aes(x = PHQ, fill = new_gender)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = swls, fill = new_gender)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = PSS, fill = new_gender)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = GAD, fill = new_gender)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = PHQ, fill = new_gender)) + geom_histogram(position = "dodge")
 
-ggplot(total, aes(x = GAD, y = as.factor(Age), fill = new_gender)) + geom_boxplot(position = "dodge")
-
-```
-
-
-
-```{r location, include=FALSE}
-#try to do heatmap of china but dataformat might not be ideal...
-loc <- abc %>% select(LocBefore18, LocCurrent)
-
-as.data.frame(table(abc$LocBefore18))
-
-
-data_loc <- as.data.frame(table(abc$LocBefore18_City))[-1,]#分界点是“-”
-library(maps)
-library(mapdata)
-
-data_loc_a <- data_loc %>% 
-  mutate(
-    Province = ifelse(substr(Var1, 3, 3) == "-", str_sub(Var1,1,2), str_sub(Var1,1,3)),
-    City = ifelse(substr(Var1, 3, 3) == "-", str_sub(Var1,4), str_sub(Var1,5))
-         ) %>%
-  select(Province, City, Freq) 
-#%>% summarise(ntotal = sum(Freq))
-
-head(data_loc_a)
-
-as.data.frame(table(abc$LocCurrent))
-
-
-
+#ggplot(data, aes(x = GAD, y = as.factor(Age), fill = new_gender)) + geom_boxplot(position = "dodge")
 
 ```
+
