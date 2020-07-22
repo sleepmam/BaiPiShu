@@ -13,7 +13,7 @@
 
 ### Directory
 
-- preprocess_XM.rmd contains script that preprocesses the original output from WenJuanXin
-- analysis_XM.rmd contains script that produces summary stats, plots, and analysis
+- preprocess_XM.Rmd contains script that preprocesses the original output from WenJuanXin
+- analysis_XM.Rmd contains script that produces summary stats, plots, and analysis
 - analysis_XM.html is a knitted document 
-- Resources contains some useful links for those who want to learn more
+- Resources.md contains some useful links 
