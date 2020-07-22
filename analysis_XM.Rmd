@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r tools, include=FALSE}
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 library(data.table)
 library(naniar)
 library(stringr)
@@ -88,7 +89,7 @@ data_vis <- data %>%
 
 #WARNING
 #Still need to provide input parameters such as what test to use and what stats to display
-data_vis$Degree
+
 #Part 0, summary stats PWB
 table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_01, title = "PWB By Age", text = TRUE)
@@ -168,6 +169,22 @@ summary(table_26, title = "Latent By GPA(change)", text = TRUE)
 
 ```{r visulization}
 
+#need to summarize data first to get error bar
+
+
+
+View(data_vis)
+#gather and spread 
+#, color = gender_grp
+data_vis_pwb <- data_vis %>%
+  gather(PWB, PWB_val, PSS_sum:QLES_sum)
+
+data_vis_lt <- data_vis %>%
+  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+
+ggplot(data_vis_g, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(stat="identity", position=position_dodge()) + scale_fill_brewer(palette="Greys")
+
+ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="identity", position=position_dodge()) + scale_fill_brewer(palette="Set3") 
 
 #Part I, PHQ
 #1.1 by age
