@@ -20,12 +20,6 @@ library(arsenal)
 ```
 
 
-## Procedure: 
-0. store file in raw data folder, make a copy and rename as "month/date/year_score/text/wjxnum"
-1. replace head column with English variable names (title.csv)
-2. run following R code
-3. remember to check for NA & exclusion criteria
-4. remember to check if health6-11 is correct
 
 ```{r import, include=FALSE}
 data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", comment.char="#", encoding = "UTF-8")
@@ -37,60 +31,65 @@ head(data)
 #Stage I: Filtering
 - we still need to work on the inclusion/exclusion criteria
 - ignore at this moment
+时间低于10分钟。
+PSS: 所有题目得分一致。
+PHQ第10题和前9题逻辑不一致。
+没有使用心理咨询等服务却选了满意度（没有选“不适用”）。
 ```{r filter, include=FALSE}
-#need to filter 
-summary(data$PHQ10)
 
-a <- data %>% select(PHQ_sum, PHQ10)
-ggplot(a, aes(PHQ_sum, PHQ10))+ geom_point()
-hist(a$PHQ10)
-hist(a$PHQ_sum)
-head(a)
+#look at distribution of time complete
+#x <- data[which(data$TimeComplete < 2000),]
+#ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
+
+
 check <- data %>%
   mutate(
-    #C1 whether there is alternativng pattern
+    qc_idx = 0,
     #C2, time of 3SD
-    C3_PHQ1 = ifelse(PHQ_sum == 0 & PHQ10 > 6, 0, 1),
-    C4_PHQ2 = ifelse(PHQ_sum > 0 & PHQ10 < 6, 0, 1)
+    qc_idx = ifelse(PHQ_sum == 0 & PHQ10 != 999, qc_idx + 1, qc_idx),
+    qc_idx = ifelse(PHQ_sum > 0 & PHQ10 == 999, qc_idx + 1, qc_idx)
     #C5 age match
     #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
     #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
     #8 29.8 (QLES3) high should correspond to -> 29.6-7 medium to high
          )
 
-summary(check$C3_PHQ1)
-summary(check$C4_PHQ2)
-head(check$PHQ10)
-dim(data)
 vis_miss(data)
 
 ```
 
 
-
 ```{r summary stats}
 data_vis <- data %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
-         new_gender = ifelse(Gender == 1, "Male", 
+         gender_grp = ifelse(Gender == 1, "Male", 
                       ifelse(Gender == 2, "Female", 
                       ifelse(Gender < 667, "Spectrum", NA))), 
+         degree_grp = ifelse(Degree == 1, "本科", 
+                      ifelse(Degree == 2, "硕士", 
+                      ifelse(Degree == 3, "MBA", 
+                      ifelse(Degree == 4, "博士", NA)))),
+
          MEMS_sum = MEMS1+ MEMS2 + MEMS3 + MEMS4
          
         )
 
+
+#WARNING
+#Still need to provide input parameters such as what test to use and what stats to display
 data_vis$Degree
 #Part 0, summary stats PWB
 table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_01, title = "PWB By Age", text = TRUE)
 
 
-table_02 <- tableby(new_gender ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+table_02 <- tableby(gender_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_02, title = "PWB By Gender", text = TRUE)
 
 
 #degree needs to recode back and religion
-#table_03 <- tableby(new_gender ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-#summary(table_03, title = "PWB By Degree", text = TRUE)
+table_03 <- tableby(degree_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_03, title = "PWB By Degree", text = TRUE)
 
 
 #Part 1, summary stats for latent
@@ -98,7 +97,7 @@ table_11 <- tableby(age_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg
 summary(table_11, title = "Latent By Age", text = TRUE)
 
 
-table_12 <- tableby(new_gender ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+table_12 <- tableby(gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
 summary(table_12, title = "Latent By Gender", text = TRUE)
 
 SCOFF_binge
@@ -108,7 +107,7 @@ MEMS1
 table_21 <- tableby(age_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
 summary(table_21, title = "spec By Age", text = TRUE)
 
-table_22 <- tableby(new_gender ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+table_22 <- tableby(gender_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
 summary(table_22, title = "spec By Gender", text = TRUE)
 
 ```
@@ -122,22 +121,22 @@ summary(table_22, title = "spec By Gender", text = TRUE)
 
 
 #1.2 by gender
-#ggplot(data_vis, aes(x = PHQ_sum, fill = new_gender)) + geom_histogram(position = "dodge") 
+#ggplot(data_vis, aes(x = PHQ_sum, fill = gender_grp)) + geom_histogram(position = "dodge") 
 
 
 ```
 
 ```{r EDA, include=FALSE}
 
-#ggplot(data, aes(x = TimeComplete, fill = new_gender)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = TimeComplete, fill = gender_grp)) + geom_histogram(position = "dodge")
 
 
-#ggplot(data, aes(x = swls, fill = new_gender)) + geom_histogram(position = "dodge")
-#ggplot(data, aes(x = PSS, fill = new_gender)) + geom_histogram(position = "dodge")
-#ggplot(data, aes(x = GAD, fill = new_gender)) + geom_histogram(position = "dodge")
-#ggplot(data, aes(x = PHQ, fill = new_gender)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = swls, fill = gender_grp)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = PSS, fill = gender_grp)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = GAD, fill = gender_grp)) + geom_histogram(position = "dodge")
+#ggplot(data, aes(x = PHQ, fill = gender_grp)) + geom_histogram(position = "dodge")
 
-#ggplot(data, aes(x = GAD, y = as.factor(Age), fill = new_gender)) + geom_boxplot(position = "dodge")
+#ggplot(data, aes(x = GAD, y = as.factor(Age), fill = gender_grp)) + geom_boxplot(position = "dodge")
 
 ```
 
