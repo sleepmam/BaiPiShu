@@ -62,7 +62,7 @@ vis_miss(data)
 ```
 
 
-```{r summary stats}
+```{r transformation}
 data_vis <- data %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
          gender_grp = ifelse(Gender == 1, "Male", 
@@ -84,9 +84,39 @@ data_vis <- data %>%
                       ifelse(GradeChange == 3, "c不变", 
                       ifelse(GradeChange == 4, "d变差", 
                       ifelse(GradeChange == 5, "e明显变差", NA))))),
-         MEMS_sum = MEMS1+ MEMS2 + MEMS3 + MEMS4
-         
         )
+
+
+```
+
+```{r visulization}
+
+#need to summarize data first to get error bar
+hist(data_vis$PSS_sum)
+
+
+#gather and spread 
+#, color = gender_grp
+data_vis_pwb <- data_vis %>%
+  gather(PWB, PWB_val, PSS_sum:QLES_sum)
+
+head(data_vis_pwb)
+
+ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = as.factor(gpa_grp))) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
+
+
+
+data_vis_lt <- data_vis %>%
+  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+
+
+ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3")
+
+
+```
+
+
+```{r summary}
 
 
 #WARNING
@@ -167,51 +197,8 @@ summary(table_25, title = "spec By GPA", text = TRUE)
 
 table_26 <- tableby(gpa_change_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
 summary(table_26, title = "Latent By GPA(change)", text = TRUE)
-```
-
-```{r visulization}
-
-#need to summarize data first to get error bar
-
-
-
-View(data_vis)
-#gather and spread 
-#, color = gender_grp
-data_vis_pwb <- data_vis %>%
-  gather(PWB, PWB_val, PSS_sum:QLES_sum)
-head(data_vis_pwb)
-data_vis_lt <- data_vis %>%
-  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
-
-ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = as.factor(gpa_grp))) + geom_bar(stat="identity", position=position_dodge()) + scale_fill_brewer(palette="Greys")
-
-View(data_vis_pwb)
-
-ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="identity", position=position_dodge()) + scale_fill_brewer(palette="Set3") 
-
-#Part I, PHQ
-#1.1 by age
-#ggplot(data_vis, aes(x = PHQ_sum, fill = age_grp)) + geom_histogram(position = "dodge") 
-
-
-#1.2 by gender
-#ggplot(data_vis, aes(x = PHQ_sum, fill = gender_grp)) + geom_histogram(position = "dodge") 
-
 
 ```
 
-```{r EDA, include=FALSE}
 
-#ggplot(data, aes(x = TimeComplete, fill = gender_grp)) + geom_histogram(position = "dodge")
-
-
-#ggplot(data, aes(x = swls, fill = gender_grp)) + geom_histogram(position = "dodge")
-#ggplot(data, aes(x = PSS, fill = gender_grp)) + geom_histogram(position = "dodge")
-#ggplot(data, aes(x = GAD, fill = gender_grp)) + geom_histogram(position = "dodge")
-#ggplot(data, aes(x = PHQ, fill = gender_grp)) + geom_histogram(position = "dodge")
-
-#ggplot(data, aes(x = GAD, y = as.factor(Age), fill = gender_grp)) + geom_boxplot(position = "dodge")
-
-```
 
