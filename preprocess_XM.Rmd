@@ -36,11 +36,13 @@ library(mapdata)
 
 #data_0710_x <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/test0710/071020_byscore.xlsx")
 
-data_0719_s <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/test0719/071920_score.xlsx")
+#data_0719_s <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/test0719/071920_score.xlsx")
+
+data_0722_s <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/final0722/072220_score.xlsx")
 
 
 #streamline into a standard df name
-df <- as.data.frame(data_0719_s)[,-c(283:289)]
+df <- as.data.frame(data_0722_s)[,-c(283:289)]
 head(df)
 dim(df)
 ```
@@ -160,34 +162,11 @@ total <- test %>%
 
 ```
 
-```{r filter, include=FALSE}
-#need to filter 
-
-check <- total %>%
-  mutate(
-    #C1 whether there is alternativng pattern
-    #C2, time of 3SD
-    C3_PHQ1 = ifelse(PHQ == 0 & "e" %in% PHQ10, 0, 1),
-    C4_PHQ2 = ifelse(PHQ != 0 & !("e" %in% PHQ10), 0, 1),
-    #C5 age match
-    #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
-    #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
-    #8 29.8 (QLES3) high should correspond to -> 29.6-7 medium to high
-    random = ifelse("a" %in% PHQ10, 1, 0)
-         )
-
-summary(check$random)
-summary(check$C3_PHQ1)
-summary(check$C4_PHQ2)
-head(check$PHQ10)
-dim(total_0716)
-vis_miss(total_0716)
-
-```
 
 
 ## Output log
 
+0722 - final data
 0719 - cleaned recode & matched var name
 0718 - finish aggregation & add recode
 0717 - add aggregation
@@ -197,14 +176,13 @@ vis_miss(total_0716)
 
 #today's output
 
-bps_df0719_xm0719_v2 <- total
-write.csv(bps_df0719_xm0719_v2,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", row.names = TRUE)
+bps_df0722_xm0722 <- total
+write.csv(bps_df0722_xm0722,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", row.names = TRUE)
 
 #write.csv(df,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0710_xm0714.csv", row.names = TRUE)
 
 #testing
-abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", comment.char="#", encoding = "UTF-8")
+abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", comment.char="#", encoding = "UTF-8")
 
 head(abc)
-
 ```

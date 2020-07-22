@@ -28,7 +28,7 @@ library(arsenal)
 4. remember to check if health6-11 is correct
 
 ```{r import, include=FALSE}
-data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0719_xm0719_v2.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", comment.char="#", encoding = "UTF-8")
 
 head(data)
 ```
@@ -89,8 +89,8 @@ summary(table_02, title = "PWB By Gender", text = TRUE)
 
 
 #degree needs to recode back and religion
-table_03 <- tableby(new_gender ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_03, title = "PWB By Degree", text = TRUE)
+#table_03 <- tableby(new_gender ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+#summary(table_03, title = "PWB By Degree", text = TRUE)
 
 
 #Part 1, summary stats for latent
