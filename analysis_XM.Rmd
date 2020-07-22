@@ -69,7 +69,18 @@ data_vis <- data %>%
                       ifelse(Degree == 2, "硕士", 
                       ifelse(Degree == 3, "MBA", 
                       ifelse(Degree == 4, "博士", NA)))),
-
+         religion_grp = ifelse(Religion %in% c(1,2,3,4,5), "教", 
+                      ifelse(Religion == 6, "无宗教信仰", NA)),
+         gpa_grp = ifelse(GPA == 1, "a.3.8+", 
+                      ifelse(GPA == 2, "b.3.5-3.8", 
+                      ifelse(GPA == 3, "c.3.3-3.5", 
+                      ifelse(GPA == 4, "d.3.0-3.3", 
+                      ifelse(GPA == 5, "e.3-", NA))))),
+         gpa_change_grp = ifelse(GradeChange == 1, "a明显变好", 
+                      ifelse(GradeChange == 2, "b变好", 
+                      ifelse(GradeChange == 3, "c不变", 
+                      ifelse(GradeChange == 4, "d变差", 
+                      ifelse(GradeChange == 5, "e明显变差", NA))))),
          MEMS_sum = MEMS1+ MEMS2 + MEMS3 + MEMS4
          
         )
@@ -87,11 +98,23 @@ table_02 <- tableby(gender_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_s
 summary(table_02, title = "PWB By Gender", text = TRUE)
 
 
-#degree needs to recode back and religion
 table_03 <- tableby(degree_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_03, title = "PWB By Degree", text = TRUE)
 
 
+table_04 <- tableby(religion_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_04, title = "PWB By Religion", text = TRUE)
+
+
+table_05 <- tableby(gpa_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_05, title = "PWB By GPA", text = TRUE)
+
+
+table_06 <- tableby(gpa_change_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_06, title = "PWB By GPA(change)", text = TRUE)
+
+
+#-------------------------------------------------------
 #Part 1, summary stats for latent
 table_11 <- tableby(age_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
 summary(table_11, title = "Latent By Age", text = TRUE)
@@ -100,16 +123,47 @@ summary(table_11, title = "Latent By Age", text = TRUE)
 table_12 <- tableby(gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
 summary(table_12, title = "Latent By Gender", text = TRUE)
 
-SCOFF_binge
-MEMS1
 
+table_13 <- tableby(degree_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+summary(table_13, title = "Latent By Degree", text = TRUE)
+
+
+table_14 <- tableby(religion_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+summary(table_14, title = "Latent By Religion", text = TRUE)
+
+
+table_15 <- tableby(gpa_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+summary(table_15, title = "Latent By GPA", text = TRUE)
+
+
+table_16 <- tableby(gpa_change_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+summary(table_16, title = "Latent By GPA(change)", text = TRUE)
+
+
+#-------------------------------------------------------
 #Part 2, specifics MEMS and SLASIA
 table_21 <- tableby(age_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
 summary(table_21, title = "spec By Age", text = TRUE)
 
+
 table_22 <- tableby(gender_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
 summary(table_22, title = "spec By Gender", text = TRUE)
 
+
+table_23 <- tableby(degree_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_23, title = "spec By Degree", text = TRUE)
+
+
+table_24 <- tableby(religion_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_24, title = "spec By Religion", text = TRUE)
+
+
+table_25 <- tableby(gpa_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_25, title = "spec By GPA", text = TRUE)
+
+
+table_26 <- tableby(gpa_change_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_26, title = "Latent By GPA(change)", text = TRUE)
 ```
 
 ```{r visulization}
