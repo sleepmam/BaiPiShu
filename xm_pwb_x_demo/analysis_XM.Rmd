@@ -9,17 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r tools, include=FALSE}
+#manipulation and cleaning
 library(dplyr)
 library(tidyr)
-
-library(data.table)
-library(naniar)
 library(stringr)
 library(lubridate)
+library(data.table)
 
-library(maps)
-library(mapdata)
-
+#visualization
+library(psych)
+library(naniar)
 library(arsenal)
 library(ggcorrplot)
 library(ggplot2)
@@ -46,6 +45,16 @@ PHQ第10题和前9题逻辑不一致。
 #look at distribution of time complete
 #x <- data[which(data$TimeComplete < 2000),]
 #ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
+
+
+test <- data %>%
+  mutate(PSS_pos = (PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6) / 6, 
+         PSS_neg = (PSS7 + PSS8 + PSS9 + PSS10) / 4,
+         PSS_usual = PSS_pos + PSS_neg,
+         PSS_reverse = PSS_pos + 4 - PSS_neg)
+View(test)
+summary(test$PSS_usual)
+summary(test$PSS_reverse)
 
 head(data$TimeComplete)
 check <- data %>%
@@ -108,6 +117,13 @@ MH exp|   x     |
 ```{r visulization}
 
 #time submit
+
+pairs.panels(iris[,-5], 
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+             )
 
 #need to summarize data first to get error bar
 hist(data_vis$PSS_sum)
