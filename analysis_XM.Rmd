@@ -135,6 +135,10 @@ data_vis_lt <- data_vis %>%
 
 #Part 0, summary stats PWB
 summary(data_vis$Service)
+table_0000 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
+summary(table_0000, title = "demo By Service", text = TRUE)
+
+
 table_00 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_00, title = "PWB By Service", text = TRUE)
 
