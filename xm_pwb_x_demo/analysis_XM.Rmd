@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #manipulation and cleaning
 library(dplyr)
 library(tidyr)
+library(plyr)
 library(stringr)
 library(lubridate)
 library(data.table)
@@ -46,34 +47,30 @@ PHQ第10题和前9题逻辑不一致。
 #x <- data[which(data$TimeComplete < 2000),]
 #ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
 
-
-test <- data %>%
-  mutate(PSS_pos = (PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6) / 6, 
-         PSS_neg = (PSS7 + PSS8 + PSS9 + PSS10) / 4,
-         PSS_usual = PSS_pos + PSS_neg,
-         PSS_reverse = PSS_pos + 4 - PSS_neg)
-View(test)
-summary(test$PSS_usual)
-summary(test$PSS_reverse)
-
-head(data$TimeComplete)
 check <- data %>%
   mutate(
-    qc_idx = 0,
+    qc_idx = 0, #set initial value
+    
+    #total time length
     qc_idx = ifelse(TimeComplete < 600, qc_idx + 1, qc_idx),
+    
+    #wrong pattern of PHQ
     qc_idx = ifelse(PHQ_sum == 0 & PHQ10 != 999, qc_idx + 1, qc_idx),
-    qc_idx = ifelse(PHQ_sum > 0 & PHQ10 == 999, qc_idx + 1, qc_idx)
-    #没有使用心理咨询等服务却选了满意度（没有选“不适用”）。
-    #C5 age match
-    #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
-    #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
-    #8 29.8 (QLES3) high should correspond to -> 29.6-7 medium to high
-         )
+    qc_idx = ifelse(PHQ_sum > 0 & PHQ10 == 999, qc_idx + 1, qc_idx),
+    
+    #wrong pattern of PSS
+    PSS_dif = (PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6) / 6 - (PSS7 + PSS8 + PSS9 + PSS10) / 4,
+    qc_idx = ifelse(abs(PSS_dif - mean(PSS_dif)) > 3*sd(PSS_dif), qc_idx + 0.5, qc_idx),
+    
+    #violate MH usage and satisfaction
+    qc_idx = ifelse(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0) , qc_idx + 1, qc_idx)
+         ) %>%
+  filter(qc_idx < 2.5) #can adjust
+
 summary(check$qc_idx)
-
-#which(check$qc_idx > 0)
+which(check$qc_idx > 2)
 vis_miss(data)
-
+#data <- check
 ```
 
 
@@ -101,10 +98,10 @@ data_vis <- data %>%
                       ifelse(GradeChange == 5, "e明显变差", NA))))),
          
          #sometime
-         time_new = ymd_hms(TimeSubmit), time_day = date(TimeSubmit),
-         ICE = ifelse(time_new <= as.Date("2020-07-06"), "beforeICE", 
-               ifelse(time_new >= as.Date("2020-07-14"), "postICE", "duringICE"))
-        )
+         time_new = ymd_hms(TimeSubmit), time_day = as.Date(TimeSubmit),
+         ICE = ifelse(time_new <= as.POSIXct("2020-07-06 04"), "beforeICE", 
+               ifelse(time_new >= as.Date("2020-07-14 04"), "postICE", "duringICE"))
+        ) 
 ```
 
 ##Stage II: Overview
@@ -114,59 +111,69 @@ Latent|   x     |     x
 Spec  |   x     |     x
 MH exp|   x     |
 
+
+```{r practice}
+
+#ICE
+ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = as.factor(ICE))) + geom_count() + scale_size_area(max_size = 3) 
+
+table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_test, title = "test", text = TRUE)
+
+#Error Bar
+data_vis_pwb_sum <- data_summary(data_vis_pwb, varname="PWB_val", groupnames=c("PWB", "ICE"))
+
+ggplot(data_vis_pwb_sum, aes(y = PWB_val, x = PWB, fill = ICE))+ geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="YlOrBr") +
+  geom_errorbar(aes(ymin=PWB_val-se, ymax=PWB_val+se), width=.1, alpha = 0.5, position=position_dodge(.9)) 
+```
+
+
 ```{r visulization}
 
-#time submit
-
-pairs.panels(iris[,-5], 
-             method = "pearson", # correlation method
-             hist.col = "#00AFBB",
-             density = TRUE,  # show density plots
-             ellipses = TRUE # show correlation ellipses
-             )
-
-#need to summarize data first to get error bar
-hist(data_vis$PSS_sum)
+data_vis_short <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, GSE_sum, MEMS, SSSI_avg)
+# pairs.panels(data_vis_short,
+#              method = "pearson", # correlation method
+#              hist.col = "#00AFBB",
+#              density = TRUE,  # show density plots
+#              ellipses = TRUE # show correlation ellipses
+#              )
 
 #scaled plot
 (plot1 <- ggplot(data_vis, aes(PHQ_sum, PSS_sum)) + geom_count() + scale_size_area(max_size = 2.5))
 
-
-cor_prep <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, ERQ_reap, ERQ_sup, GSE_sum, MEMS, SSSI_avg)
-
-corr <- cor(cor_prep)
-#cor.mat <- cor_pmat(cor_prep)
+corr <- cor(data_vis_short)
 (plot2 <- ggcorrplot(corr, method = "circle", type = "lower"))
 
 #gather and spread 
-#, color = gender_grp
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, PSS_sum:QLES_sum)
-
-head(data_vis_pwb)
-
 (plot3 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys"))
-
 
 
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
-
-
 (plot4 <- ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3"))
 ```
 
 
 
-```{r summary}
 
-#ggplot(data_date, aes(y = PSS_sum, x = time_day, color = as.factor(ICE))) + geom_count() + scale_size_area(max_size = 3) 
+```{r helper func}
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+```
 
-#table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_date)
-#summary(table_test, title = "test", text = TRUE)
-
-#ggplot(data_date_g, aes(y = PWB_val, x = PWB, fill = ICE))+ geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="YlOrBr")
-
+```{r archive}
 #WARNING
 #Still need to provide input parameters such as what test to use and what stats to display
 
