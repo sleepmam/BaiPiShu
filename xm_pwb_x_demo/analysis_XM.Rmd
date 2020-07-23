@@ -47,19 +47,22 @@ PHQ第10题和前9题逻辑不一致。
 #x <- data[which(data$TimeComplete < 2000),]
 #ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
 
-
+head(data$TimeComplete)
 check <- data %>%
   mutate(
     qc_idx = 0,
-    #C2, time of 3SD
+    qc_idx = ifelse(TimeComplete < 600, qc_idx + 1, qc_idx),
     qc_idx = ifelse(PHQ_sum == 0 & PHQ10 != 999, qc_idx + 1, qc_idx),
     qc_idx = ifelse(PHQ_sum > 0 & PHQ10 == 999, qc_idx + 1, qc_idx)
+    #没有使用心理咨询等服务却选了满意度（没有选“不适用”）。
     #C5 age match
     #6 29.7 (QLES2) high should correspond to -> 28b1-6 low
     #7 29.8 (QLES3) high should correspond to -> 29.1-5 high
     #8 29.8 (QLES3) high should correspond to -> 29.6-7 medium to high
          )
+summary(check$qc_idx)
 
+#which(check$qc_idx > 0)
 vis_miss(data)
 
 ```
