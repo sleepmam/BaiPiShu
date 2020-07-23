@@ -67,14 +67,14 @@ check <- data %>%
          ) %>%
   filter(qc_idx < 2.5) #can adjust
 
-summary(check$qc_idx)
-which(check$qc_idx > 2)
-vis_miss(data)
+#summary(check$qc_idx)
+#which(check$qc_idx > 2)
+#vis_miss(data)
 #data <- check
 ```
 
 
-```{r transformation}
+```{r transformation, include=FALSE}
 data_vis <- data %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
          gender_grp = ifelse(Gender == 1, "Male", 
@@ -113,7 +113,24 @@ MH exp|   x     |
 
 
 ```{r practice}
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
 
+data_vis_pwb <- data_vis %>%
+  gather(PWB, PWB_val, PSS_sum:QLES_sum)
+
+data_vis_lt <- data_vis %>%
+  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 #ICE
 ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = as.factor(ICE))) + geom_count() + scale_size_area(max_size = 3) 
 
@@ -145,32 +162,19 @@ corr <- cor(data_vis_short)
 (plot2 <- ggcorrplot(corr, method = "circle", type = "lower"))
 
 #gather and spread 
-data_vis_pwb <- data_vis %>%
-  gather(PWB, PWB_val, PSS_sum:QLES_sum)
+
 (plot3 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys"))
 
 
-data_vis_lt <- data_vis %>%
-  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+
 (plot4 <- ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3"))
 ```
 
 
 
 
-```{r helper func}
-data_summary <- function(data, varname, groupnames){
-  require(plyr)
-  summary_func <- function(x, col){
-    c(mean = mean(x[[col]], na.rm=TRUE),
-      sd = sd(x[[col]], na.rm=TRUE),
-      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
-  } #need to check se correctness
-  data_sum<-ddply(data, groupnames, .fun=summary_func,
-                  varname)
-  data_sum <- rename(data_sum, c("mean" = varname))
- return(data_sum)
-}
+```{r helper func, include = FALSE}
+
 ```
 
 ```{r archive}
