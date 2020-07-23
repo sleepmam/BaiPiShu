@@ -134,6 +134,11 @@ data_vis_lt <- data_vis %>%
 #Still need to provide input parameters such as what test to use and what stats to display
 
 #Part 0, summary stats PWB
+summary(data_vis$Service)
+table_00 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_00, title = "PWB By Service", text = TRUE)
+
+
 table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_01, title = "PWB By Age", text = TRUE)
 
@@ -160,32 +165,40 @@ summary(table_06, title = "PWB By GPA(change)", text = TRUE)
 
 #-------------------------------------------------------
 #Part 1, summary stats for latent
-table_11 <- tableby(age_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+
+table_10 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_10, title = "Latent By Service", text = TRUE)
+
+table_11 <- tableby(age_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
 summary(table_11, title = "Latent By Age", text = TRUE)
 
 
-table_12 <- tableby(gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+table_12 <- tableby(gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
 summary(table_12, title = "Latent By Gender", text = TRUE)
 
 
-table_13 <- tableby(degree_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+table_13 <- tableby(degree_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
 summary(table_13, title = "Latent By Degree", text = TRUE)
 
 
-table_14 <- tableby(religion_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+table_14 <- tableby(religion_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
 summary(table_14, title = "Latent By Religion", text = TRUE)
 
 
-table_15 <- tableby(gpa_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+table_15 <- tableby(gpa_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
 summary(table_15, title = "Latent By GPA", text = TRUE)
 
 
-table_16 <- tableby(gpa_change_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS_sum + SSSI_avg, data = data_vis)
+table_16 <- tableby(gpa_change_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
 summary(table_16, title = "Latent By GPA(change)", text = TRUE)
 
 
 #-------------------------------------------------------
 #Part 2, specifics MEMS and SLASIA
+
+table_20 <- tableby(Service ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_20, title = "spec By Service", text = TRUE)
+
 table_21 <- tableby(age_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
 summary(table_21, title = "spec By Age", text = TRUE)
 
