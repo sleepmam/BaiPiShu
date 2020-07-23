@@ -87,9 +87,12 @@ data_vis <- data %>%
                       ifelse(GradeChange == 3, "c不变", 
                       ifelse(GradeChange == 4, "d变差", 
                       ifelse(GradeChange == 5, "e明显变差", NA))))),
+         
+         #sometime
+         time_new = ymd_hms(TimeSubmit), time_day = date(TimeSubmit),
+         ICE = ifelse(time_new <= as.Date("2020-07-06"), "beforeICE", 
+               ifelse(time_new >= as.Date("2020-07-14"), "postICE", "duringICE"))
         )
-
-
 ```
 
 ##Stage II: Overview
@@ -132,26 +135,18 @@ data_vis_lt <- data_vis %>%
 
 
 (plot4 <- ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3"))
-
-
 ```
 
 
 
 ```{r summary}
-head(data_vis$TimeSubmit)
-data_date <- data_vis %>%
-  mutate(time_new = ymd_hms(TimeSubmit)) %>%
-  mutate(ICE = ifelse(time_new <= as.Date("2020-07-06"), "beforeICE", 
-               ifelse(time_new >= as.Date("2020-07-14"), "postICE", "duringICE"))) 
-#%>%
-#  gather(PWB, PWB_val, PSS_sum:QLES_sum)
 
-ggplot(data_vis, aes(y = PHQ_sum, x = TimeSubmit)) + geom_count() + scale_size_area(max_size = 1)
+#ggplot(data_date, aes(y = PSS_sum, x = time_day, color = as.factor(ICE))) + geom_count() + scale_size_area(max_size = 3) 
 
+#table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_date)
+#summary(table_test, title = "test", text = TRUE)
 
-head(data_date)
-ggplot(data_date, aes(y = PWB_val, x = PWB, fill = ICE))+ geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3")
+#ggplot(data_date_g, aes(y = PWB_val, x = PWB, fill = ICE))+ geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="YlOrBr")
 
 #WARNING
 #Still need to provide input parameters such as what test to use and what stats to display
