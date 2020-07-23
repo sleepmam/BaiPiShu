@@ -96,14 +96,15 @@ data_vis <- data %>%
 #need to summarize data first to get error bar
 hist(data_vis$PSS_sum)
 
-ggplot(data_vis, aes(PHQ_sum, PSS_sum)) + geom_count() + scale_size_area(max_size = 2.5)
+#scaled plot
+(plot1 <- ggplot(data_vis, aes(PHQ_sum, PSS_sum)) + geom_count() + scale_size_area(max_size = 2.5))
 
 
 cor_prep <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, ERQ_reap, ERQ_sup, GSE_sum, MEMS, SSSI_avg)
 
 corr <- cor(cor_prep)
 #cor.mat <- cor_pmat(cor_prep)
-ggcorrplot(corr, method = "circle", type = "lower")
+(plot2 <- ggcorrplot(corr, method = "circle", type = "lower"))
 
 #gather and spread 
 #, color = gender_grp
@@ -112,7 +113,7 @@ data_vis_pwb <- data_vis %>%
 
 head(data_vis_pwb)
 
-ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys")
+(plot3 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys"))
 
 
 
@@ -120,7 +121,7 @@ data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
 
-ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3")
+(plot4 <- ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3"))
 
 
 ```
