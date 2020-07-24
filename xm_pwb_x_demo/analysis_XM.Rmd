@@ -2,7 +2,9 @@
 title: "baipishu"
 author: "marshall ma"
 date: "7/10/2020"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -24,9 +26,6 @@ library(arsenal)
 library(ggcorrplot)
 library(ggplot2)
 ```
-
-
-
 ```{r import, include=FALSE}
 data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", comment.char="#", encoding = "UTF-8")
 
@@ -35,12 +34,10 @@ head(data)
 
 
 ##Stage I: Filtering
-- we still need to work on the inclusion/exclusion criteria
-- ignore at this moment
-时间低于10分钟。
-PSS: 所有题目得分一致。
-PHQ第10题和前9题逻辑不一致。
-没有使用心理咨询等服务却选了满意度（没有选“不适用”）。
+时间低于10分钟。   
+PSS: 所有题目得分一致。  
+PHQ第10题和前9题逻辑不一致。  
+没有使用心理咨询等服务却选了满意度（没有选“不适用”）。  
 ```{r filter, include=FALSE}
 
 #look at distribution of time complete
@@ -97,6 +94,8 @@ data_vis <- data %>%
                       ifelse(GradeChange == 4, "d变差", 
                       ifelse(GradeChange == 5, "e明显变差", NA))))),
          
+         MEMS_3 = MEMS1 + MEMS2 + MEMS3,
+         
          #sometime
          time_new = ymd_hms(TimeSubmit), time_day = as.Date(TimeSubmit),
          ICE = ifelse(time_new <= as.POSIXct("2020-07-06 04"), "beforeICE", 
@@ -113,8 +112,6 @@ MH exp|   x     |
 
 
 ```{r practice}
-
-
 
 data_summary <- function(data, varname, groupnames){
   require(plyr)
@@ -135,8 +132,11 @@ data_vis_pwb <- data_vis %>%
 
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+
 #ICE
-ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = as.factor(ICE))) + geom_count() + scale_size_area(max_size = 3) 
+ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = ICE)) + 
+  geom_count() + 
+  scale_size_area(max_size = 3) 
 
 table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_test, title = "test", text = TRUE)
@@ -144,23 +144,25 @@ summary(table_test, title = "test", text = TRUE)
 #Error Bar
 data_vis_pwb_sum <- data_summary(data_vis_pwb, varname="PWB_val", groupnames=c("PWB", "ICE"))
 
-ggplot(data_vis_pwb_sum, aes(y = PWB_val, x = PWB, fill = ICE))+ geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="YlOrBr") +
-  geom_errorbar(aes(ymin=PWB_val-se, ymax=PWB_val+se), width=.1, alpha = 0.5, position=position_dodge(.9)) 
+ggplot(data_vis_pwb_sum, aes(y = PWB_val, x = PWB, fill = ICE)) + 
+  geom_bar(stat="summary", position = "dodge", fun = mean) + 
+  scale_fill_brewer(palette="YlOrBr") +
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) 
 ```
 
 
 ```{r visulization}
 
-data_vis_short <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, GSE_sum, MEMS, SSSI_avg)
-# pairs.panels(data_vis_short,
-#              method = "pearson", # correlation method
-#              hist.col = "#00AFBB",
-#              density = TRUE,  # show density plots
-#              ellipses = TRUE # show correlation ellipses
-#              )
+data_vis_short <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, GSE_sum, MEMS_3, SSSI_avg)
+
 
 #scaled plot
-(plot1 <- ggplot(data_vis, aes(PHQ_sum, PSS_sum)) + geom_count() + scale_size_area(max_size = 2.5))
+(plot1 <- pairs.panels(data_vis_short,
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+             ))
 
 corr <- cor(data_vis_short)
 (plot2 <- ggcorrplot(corr, method = "circle", type = "lower"))
@@ -177,11 +179,7 @@ corr <- cor(data_vis_short)
 
 
 
-```{r helper func, include = FALSE}
-
-```
-
-```{r archive}
+```{r archive,include=FALSE}
 #WARNING
 #Still need to provide input parameters such as what test to use and what stats to display
 
