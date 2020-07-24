@@ -113,6 +113,9 @@ MH exp|   x     |
 
 
 ```{r practice}
+
+
+
 data_summary <- function(data, varname, groupnames){
   require(plyr)
   summary_func <- function(x, col){
@@ -125,6 +128,7 @@ data_summary <- function(data, varname, groupnames){
   data_sum <- rename(data_sum, c("mean" = varname))
  return(data_sum)
 }
+
 
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, PSS_sum:QLES_sum)
