@@ -73,15 +73,28 @@ combo <- df %>%
   )
 head(combo)
 
+x <- combo %>% summarise(n = count(tui_sum)) 
+head(x)
+a <- x$n
+a$x
+x = as.data.frame(x)
+typeof(x$n)
+
+
 summary(combo$tui_sum)
 summary(combo$fin_sum)
 which(combo$fin_sum == 0)
-#spread
 
 
 #120 307
-bp<- ggplot(combo, aes(x="", y=value, fill=group))+
-geom_bar(width = 1, stat = "identity")
+ggplot(combo, aes(x = tui_sum)) + 
+  geom_bar(stat="count", position = "dodge") 
+
+ggplot(combo, aes(x=factor(1), fill=tui_sum)) +
+  geom_bar(width = 1) +
+  coord_polar("y") +
+  theme_minimal() + 
+  scale_fill_grey() 
 
 
 ```
