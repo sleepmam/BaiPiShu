@@ -47,6 +47,41 @@ head(df)
 dim(df)
 ```
 
+
+```{r finance}
+
+data_0722_t <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/final0722/072220_text.xlsx") #process and append to ID
+
+df <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource)
+
+combo <- df %>%
+  mutate(
+    fin1 = ifelse(str_detect(FinSource, "a."), 1, 0),
+    fin2 = ifelse(str_detect(FinSource, "b."), 1, 0),
+    fin3 = ifelse(str_detect(FinSource, "c."), 1, 0),
+    fin4 = ifelse(str_detect(FinSource, "d."), 1, 0),
+    fin5 = ifelse(str_detect(FinSource, "e."), 1, 0),
+  )
+head(combo)
+
+"学" %in% ("学校学费减免或学费奖学金")
+str_conv("学", "UTF-8")
+
+str_replace("学校学费减免或学费奖学金", c("学"), "-")
+
+test$Degree <- recode_factor(test$Degree, 'b.本科' = 1, 'c.硕士' = 2, 'd.MBA' = 3, 'e.博士' = 4)
+```
+1学校学费减免或学费奖学金
+2家庭/父母
+3国内政府支付
+4学校内工作(比如助教、研究助理员等)
+5学校外工作(比如CPT\OPT期间的实习等)
+
+1父母家庭支持
+2国内政府支付
+3学校内工作(比如助教、研究助理员等)
+4学校外工作(比如CPT\OPT期间的实习等)
+
 ```{r recode, include=FALSE}
 test <- df
 
