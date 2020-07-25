@@ -34,10 +34,10 @@ head(data)
 
 
 ##Stage I: Filtering
-时间低于10分钟。   
-PSS: 所有题目得分一致。  
-PHQ第10题和前9题逻辑不一致。  
-没有使用心理咨询等服务却选了满意度（没有选“不适用”）。  
+1. 时间低于10分钟。   
+2. PSS: 所有题目得分一致。  
+3. PHQ第10题和前9题逻辑不一致。  
+4. 没有使用心理咨询等服务却选了满意度（没有选“不适用”）。  
 ```{r filter, include=FALSE}
 
 #look at distribution of time complete
@@ -62,7 +62,7 @@ check <- data %>%
     #violate MH usage and satisfaction
     qc_idx = ifelse(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0) , qc_idx + 1, qc_idx)
          ) %>%
-  filter(qc_idx < 2.5) #can adjust
+  filter(qc_idx < 2) #can adjust
 
 #summary(check$qc_idx)
 #which(check$qc_idx > 2)
@@ -72,7 +72,7 @@ check <- data %>%
 
 
 ```{r transformation, include=FALSE}
-data_vis <- data %>% 
+data_vis <- check %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
          gender_grp = ifelse(Gender == 1, "Male", 
                       ifelse(Gender == 2, "Female", 
@@ -98,8 +98,8 @@ data_vis <- data %>%
          
          #sometime
          time_new = ymd_hms(TimeSubmit), time_day = as.Date(TimeSubmit),
-         ICE = ifelse(time_new <= as.POSIXct("2020-07-06 04"), "beforeICE", 
-               ifelse(time_new >= as.Date("2020-07-14 04"), "postICE", "duringICE"))
+         ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "beforeICE", 
+               ifelse(time_new >= as.Date("2020-07-14 05"), "postICE", "duringICE"))
         ) 
 ```
 
@@ -112,20 +112,6 @@ MH exp|   x     |
 
 
 ```{r practice}
-
-data_summary <- function(data, varname, groupnames){
-  require(plyr)
-  summary_func <- function(x, col){
-    c(mean = mean(x[[col]], na.rm=TRUE),
-      sd = sd(x[[col]], na.rm=TRUE),
-      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
-  } #need to check se correctness
-  data_sum<-ddply(data, groupnames, .fun=summary_func,
-                  varname)
-  data_sum <- rename(data_sum, c("mean" = varname))
- return(data_sum)
-}
-
 
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, PSS_sum:QLES_sum)
@@ -140,6 +126,23 @@ ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = ICE)) +
 
 table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
 summary(table_test, title = "test", text = TRUE)
+
+```
+
+```{r helper}
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
 
 #Error Bar
 data_vis_pwb_sum <- data_summary(data_vis_pwb, varname="PWB_val", groupnames=c("PWB", "ICE"))
