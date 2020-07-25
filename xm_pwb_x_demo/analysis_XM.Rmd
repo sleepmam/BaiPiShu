@@ -44,6 +44,15 @@ head(data)
 #x <- data[which(data$TimeComplete < 2000),]
 #ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
 
+
+head(data)
+summary(check1$qc_idx)
+check1 <- data %>%
+  mutate(
+    qc_idx = 0, #set initial value
+    qc_idx = ifelse(TimeComplete < 600, qc_idx + 1, qc_idx))
+which(check1$TimeComplete < 600)
+
 check <- data %>%
   mutate(
     qc_idx = 0, #set initial value
@@ -61,18 +70,19 @@ check <- data %>%
     
     #violate MH usage and satisfaction
     qc_idx = ifelse(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0) , qc_idx + 1, qc_idx)
-         ) %>%
-  filter(qc_idx < 2) #can adjust
+         ) 
+#%>%
+  #filter(qc_idx < 2) #can adjust
 
-#summary(check$qc_idx)
-#which(check$qc_idx > 2)
+summary(check$qc_idx)
+which(check$qc_idx > 0)
 #vis_miss(data)
 #data <- check
 ```
 
 
 ```{r transformation, include=FALSE}
-data_vis <- check %>% 
+data_vis <- data %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
          gender_grp = ifelse(Gender == 1, "Male", 
                       ifelse(Gender == 2, "Female", 

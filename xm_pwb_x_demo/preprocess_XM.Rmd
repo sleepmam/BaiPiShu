@@ -56,20 +56,34 @@ df <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource
 
 combo <- df %>%
   mutate(
-    fin1 = ifelse(str_detect(FinSource, "a."), 1, 0),
-    fin2 = ifelse(str_detect(FinSource, "b."), 1, 0),
-    fin3 = ifelse(str_detect(FinSource, "c."), 1, 0),
-    fin4 = ifelse(str_detect(FinSource, "d."), 1, 0),
-    fin5 = ifelse(str_detect(FinSource, "e."), 1, 0),
+    fin1_fam = ifelse(str_detect(FinSource, "a."), 1, 0),
+    fin2_gov = ifelse(str_detect(FinSource, "b."), 1, 0),
+    fin3_in = ifelse(str_detect(FinSource, "c."), 1, 0),
+    fin4_out = ifelse(str_detect(FinSource, "d."), 1, 0),
+    fin5_other = ifelse(str_detect(FinSource, "e."), 1, 0),
+    fin_sum = as.factor(fin1_fam + fin2_gov + fin3_in + fin4_out + fin5_other),
+    
+    tui1_sch = ifelse(str_detect(Tuition, "a."), 1, 0),
+    tui2_fam = ifelse(str_detect(Tuition, "b."), 1, 0),
+    tui3_gov = ifelse(str_detect(Tuition, "c."), 1, 0),
+    tui4_in = ifelse(str_detect(Tuition, "d."), 1, 0),
+    tui5_out = ifelse(str_detect(Tuition, "e."), 1, 0),
+    tui6_other = ifelse(str_detect(Tuition, "f."), 1, 0),
+    tui_sum = as.factor(tui1_sch + tui2_fam + tui3_gov  + tui4_in + tui5_out + tui6_other)
   )
 head(combo)
 
-"学" %in% ("学校学费减免或学费奖学金")
-str_conv("学", "UTF-8")
+summary(combo$tui_sum)
+summary(combo$fin_sum)
+which(combo$fin_sum == 0)
+#spread
 
-str_replace("学校学费减免或学费奖学金", c("学"), "-")
 
-test$Degree <- recode_factor(test$Degree, 'b.本科' = 1, 'c.硕士' = 2, 'd.MBA' = 3, 'e.博士' = 4)
+#120 307
+bp<- ggplot(combo, aes(x="", y=value, fill=group))+
+geom_bar(width = 1, stat = "identity")
+
+
 ```
 1学校学费减免或学费奖学金
 2家庭/父母
