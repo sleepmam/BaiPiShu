@@ -52,9 +52,9 @@ dim(df)
 
 data_0722_t <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/final0722/072220_text.xlsx") #process and append to ID
 
-df <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource)
+df_f <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource)
 
-combo <- df %>%
+combo <- df_f %>%
   mutate(
     fin1_fam = ifelse(str_detect(FinSource, "a."), 1, 0),
     fin2_gov = ifelse(str_detect(FinSource, "b."), 1, 0),
@@ -69,32 +69,10 @@ combo <- df %>%
     tui4_in = ifelse(str_detect(Tuition, "d."), 1, 0),
     tui5_out = ifelse(str_detect(Tuition, "e."), 1, 0),
     tui6_other = ifelse(str_detect(Tuition, "f."), 1, 0),
-    tui_sum = as.factor(tui1_sch + tui2_fam + tui3_gov  + tui4_in + tui5_out + tui6_other)
-  )
+    tui_sum = as.factor(tui1_sch + tui2_fam + tui3_gov  + tui4_in + tui5_out + tui6_other),
+    ID = as.double(ID)
+  ) %>% select(-c(Tuition, FinSource))
 head(combo)
-
-x <- combo %>% summarise(n = count(tui_sum)) 
-head(x)
-a <- x$n
-a$x
-x = as.data.frame(x)
-typeof(x$n)
-
-
-summary(combo$tui_sum)
-summary(combo$fin_sum)
-which(combo$fin_sum == 0)
-
-
-#120 307
-ggplot(combo, aes(x = tui_sum)) + 
-  geom_bar(stat="count", position = "dodge") + coord_flip()
-
-ggplot(combo, aes(x=factor(1), fill=tui_sum)) +
-  geom_bar(width = 1) +
-  coord_polar("y") +
-  theme_minimal() + 
-  scale_fill_grey() 
 
 
 ```
@@ -238,8 +216,12 @@ total <- test %>%
 
 #today's output
 
-bps_df0722_xm0722 <- total
-write.csv(bps_df0722_xm0722,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", row.names = TRUE)
+#left join combo, total
+combine <- left_join(total, combo, by = "ID")
+head(combine)
+
+bps_df0722_xm0725 <- total
+write.csv(bps_df0722_xm0725,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", row.names = TRUE)
 
 #write.csv(df,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0710_xm0714.csv", row.names = TRUE)
 
