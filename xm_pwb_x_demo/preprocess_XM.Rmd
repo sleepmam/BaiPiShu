@@ -88,7 +88,7 @@ which(combo$fin_sum == 0)
 
 #120 307
 ggplot(combo, aes(x = tui_sum)) + 
-  geom_bar(stat="count", position = "dodge") 
+  geom_bar(stat="count", position = "dodge") + coord_flip()
 
 ggplot(combo, aes(x=factor(1), fill=tui_sum)) +
   geom_bar(width = 1) +
