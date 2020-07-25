@@ -220,13 +220,13 @@ total <- test %>%
 combine <- left_join(total, combo, by = "ID")
 head(combine)
 
-bps_df0722_xm0725 <- total
+bps_df0722_xm0725 <- combine
 write.csv(bps_df0722_xm0725,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", row.names = TRUE)
 
 #write.csv(df,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0710_xm0714.csv", row.names = TRUE)
 
 #testing
-abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", comment.char="#", encoding = "UTF-8")
+abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", comment.char="#", encoding = "UTF-8")
 
 head(abc)
 ```

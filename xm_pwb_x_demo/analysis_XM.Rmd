@@ -103,6 +103,8 @@ data_vis <- data %>%
          ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "beforeICE", 
                ifelse(time_new >= as.Date("2020-07-14 05"), "postICE", "duringICE"))
         ) 
+
+
 ```
 
 ##Stage II: Overview
@@ -113,25 +115,39 @@ Spec  |   x     |     x
 MH exp|   x     |
 
 
-```{r practice}
-
+```{r part 1 demo}
+#extra transformation
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, PSS_sum:QLES_sum)
 
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+#-------------------------------
 
-#ICE
-ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = ICE)) + 
-  geom_count() + 
-  scale_size_area(max_size = 3) 
+#part 1.1  finance and tuition
 
-table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_test, title = "test", text = TRUE)
+
+#120 307
+ggplot(data_vis, aes(x = tui_sum)) + 
+  geom_bar(stat="count", position = "dodge") + coord_flip() + ggtitle("Plot1.1.1 Count of Subjects in 5 Tuition Conditions")
+
+ggplot(data_vis, aes(x=factor(1), fill=as.factor(tui_sum))) +
+  geom_bar(width = 1) +
+  coord_polar("y") +
+  theme_minimal() + 
+  scale_fill_grey() + ggtitle("Plot1.1.2 Count of Subjects in 5 Tuition Conditions")
+
+
+#part 1.2  basic demo
+
+ggplot(data_vis, aes(x = gender_grp)) + 
+  geom_bar(stat="count", position = "dodge") + coord_flip() + ggtitle("Plot1.2.1 Count of Subjects in Gender Groups")
+
+
 
 ```
 
-```{r helper}
+```{r part 2.1 helper}
 
 data_summary <- function(data, varname, groupnames){
   require(plyr)
@@ -146,32 +162,21 @@ data_summary <- function(data, varname, groupnames){
  return(data_sum)
 }
 
+
 #Error Bar
 data_vis_pwb_sum <- data_summary(data_vis_pwb, varname="PWB_val", groupnames=c("PWB", "ICE"))
 
 ggplot(data_vis_pwb_sum, aes(y = PWB_val, x = PWB, fill = ICE)) + 
   geom_bar(stat="summary", position = "dodge", fun = mean) + 
   scale_fill_brewer(palette="YlOrBr") +
-  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+  ggtitle("Plot2.1.1 PWB x ICE groups")
 ```
 
 
-```{r visulization}
+```{r part 2.2 x}
 
 data_vis_short <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, GSE_sum, MEMS_3, SSSI_avg)
-
-
-
-#120 307
-ggplot(combo, aes(x = tui_sum)) + 
-  geom_bar(stat="count", position = "dodge") + coord_flip()
-
-ggplot(combo, aes(x=factor(1), fill=tui_sum)) +
-  geom_bar(width = 1) +
-  coord_polar("y") +
-  theme_minimal() + 
-  scale_fill_grey() 
-
 
 #scaled plot
 (plot1 <- pairs.panels(data_vis_short,
@@ -191,6 +196,22 @@ corr <- cor(data_vis_short)
 
 
 (plot4 <- ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+#ICE
+ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = ICE)) + 
+  geom_count() + 
+  scale_size_area(max_size = 3) 
+
+table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_test, title = "test", text = TRUE)
+
+table_0000 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
+summary(table_0000, title = "demo By Service", text = TRUE)
+
+table_y2 <- tableby(GAD_sum ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
+summary(table_y2, title = "demo By Service", text = TRUE)
+
 ```
 
 
