@@ -209,8 +209,17 @@ summary(table_test, title = "test", text = TRUE)
 table_0000 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
 summary(table_0000, title = "demo By Service", text = TRUE)
 
-table_y2 <- tableby(GAD_sum ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
-summary(table_y2, title = "demo By Service", text = TRUE)
+
+table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_01, title = "PWB By Age", text = TRUE)
+
+
+table_02 <- tableby(gender_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_02, title = "PWB By Gender", text = TRUE)
+
+
+table_03 <- tableby(degree_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_03, title = "PWB By Degree", text = TRUE)
 
 ```
 
@@ -226,13 +235,6 @@ summary(data_vis$Service)
 table_0000 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
 summary(table_0000, title = "demo By Service", text = TRUE)
 
-
-table_y1 <- tableby(religion_grp ~ GAD_sum + PHQ_sum, data = data_vis)
-summary(table_y1, title = "demo By Service", text = TRUE)
-#age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp
-
-table_y2 <- tableby(GAD_sum ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
-summary(table_y2, title = "demo By Service", text = TRUE)
 
 
 table_00 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
