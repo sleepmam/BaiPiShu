@@ -226,7 +226,46 @@ write.csv(bps_df0722_xm0725,"~/Documents/2020_2Summer/research/0Yale2009/data/ou
 #write.csv(df,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0710_xm0714.csv", row.names = TRUE)
 
 #testing
-abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", comment.char="#", encoding = "UTF-8")
 
-head(abc)
+head(data)
+```
+
+
+```{r filter, include=FALSE}
+
+#look at distribution of time complete
+#x <- data[which(data$TimeComplete < 2000),]
+#ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
+x1 <- data %>%
+  filter(TimeComplete < 600) %>%
+  select(ID)
+
+x2 <- data %>%
+  filter((PHQ_sum == 0 & PHQ10 != 999) | (PHQ_sum > 0 & PHQ10 == 999)) %>%
+  select(ID)
+x2$ID
+
+x3 <- data %>%
+  mutate(PSS_dif = (PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6) / 6 - (PSS7 + PSS8 + PSS9 + PSS10) / 4) %>%
+  filter(abs(PSS_dif - mean(PSS_dif)) > 3*sd(PSS_dif))%>%
+  select(ID)
+  
+#no output
+x4 <- data %>%
+  filter(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0)) %>%
+  select(ID)
+
+x5 <- data %>%
+  filter( Service == 1 & (ServLoc == 0 | ServLang == 0 ))%>%
+  select(ID)
+ 
+x_merged <- as.data.frame(table(c(x1$ID, x2$ID, x3$ID, x4$ID, x5$ID))) %>% filter(Freq > 1) %>% select(Var1)
+
+check_out <- data %>%
+  filter(ID %in% x_merged$Var1)
+
+write.csv(check_out,"~/Documents/2020_2Summer/research/0Yale2009/data/output/outlier_df0722_xm0726.csv", row.names = TRUE)
+
+View(check)
 ```
