@@ -62,28 +62,9 @@ x4 <- data %>%
   filter(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0)) %>%
   select(ID)
 
-check <- data %>%
-  mutate(
-    qc_idx = 0,
-    #total time length
-    qc_idx = ifelse(TimeComplete < 600, qc_idx + 0.0001, qc_idx),
-    
-    #wrong pattern of PHQ
-    qc_idx = ifelse(PHQ_sum == 0 & PHQ10 != 999, qc_idx + 1, qc_idx),
-    qc_idx = ifelse(PHQ_sum > 0 & PHQ10 == 999, qc_idx + 1, qc_idx),
-    
-    #wrong pattern of PSS
-    PSS_dif = (PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6) / 6 - (PSS7 + PSS8 + PSS9 + PSS10) / 4,
-    qc_idx = ifelse(abs(PSS_dif - mean(PSS_dif)) > 3*sd(PSS_dif), qc_idx + 0.01, qc_idx),
-    
-    #violate MH usage and satisfaction
-    qc_idx = ifelse(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0) , qc_idx + 0.001, qc_idx)
-         ) 
-hist(check2$qc_idx)
-#%>%
-  #filter(qc_idx < 2) #can adjust
-#vis_miss(data)
-#data <- check
+
+x5 <- data %>%
+  filter()
 ```
 
 ```{r filter result}
