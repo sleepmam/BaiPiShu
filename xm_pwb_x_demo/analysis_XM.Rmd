@@ -33,17 +33,7 @@ head(data)
 ```
 
 
-##Stage I: Filtering
-1. 时间低于10分钟。   
-2. PSS: 所有题目得分一致。  
-3. PHQ第10题和前9题逻辑不一致。  
-4. 没有使用心理咨询等服务却选了满意度（没有选“不适用”）。  
 
-
-```{r filter result}
-summary(check$qc_idx)
-which(check$qc_idx > 0)
-```
 
 
 ```{r transformation, include=FALSE}
