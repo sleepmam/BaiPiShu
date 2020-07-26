@@ -34,8 +34,6 @@ head(data)
 
 
 
-
-
 ```{r transformation, include=FALSE}
 data_vis <- data %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
