@@ -58,3 +58,217 @@ hist(check2$qc_idx)
 ```
 
 
+
+```{r part 1 demo}
+#extra transformation
+data_vis_pwb <- data_vis %>%
+  gather(PWB, PWB_val, PSS_sum:QLES_sum)
+
+data_vis_lt <- data_vis %>%
+  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+#-------------------------------
+
+#part 1.1  finance and tuition
+
+
+#120 307
+ggplot(data_vis, aes(x = tui_sum)) + 
+  geom_bar(stat="count", position = "dodge") + coord_flip() + ggtitle("Plot1.1.1 Count of Subjects in 5 Tuition Conditions")
+
+ggplot(data_vis, aes(x=factor(1), fill=as.factor(tui_sum))) +
+  geom_bar(width = 1) +
+  coord_polar("y") +
+  theme_minimal() + 
+  scale_fill_grey() + ggtitle("Plot1.1.2 Count of Subjects in 5 Tuition Conditions")
+
+
+#part 1.2  basic demo
+
+ggplot(data_vis, aes(x = gender_grp)) + 
+  geom_bar(stat="count", position = "dodge") + coord_flip() + ggtitle("Plot1.2.1 Count of Subjects in Gender Groups")
+
+
+
+```
+
+```{r part 2.1 helper}
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+
+#Error Bar
+data_vis_pwb_sum <- data_summary(data_vis_pwb, varname="PWB_val", groupnames=c("PWB", "ICE"))
+
+ggplot(data_vis_pwb_sum, aes(y = PWB_val, x = PWB, fill = ICE)) + 
+  geom_bar(stat="summary", position = "dodge", fun = mean) + 
+  scale_fill_brewer(palette="YlOrBr") +
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+  ggtitle("Plot2.1.1 PWB x ICE groups")
+```
+
+
+```{r part 2.2 x}
+
+data_vis_short <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, GSE_sum, MEMS_3, SSSI_avg)
+
+#scaled plot
+(plot1 <- pairs.panels(data_vis_short,
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+             ))
+
+corr <- cor(data_vis_short)
+(plot2 <- ggcorrplot(corr, method = "circle", type = "lower"))
+
+#gather and spread 
+
+(plot3 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys"))
+
+
+
+(plot4 <- ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+#ICE
+ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = ICE)) + 
+  geom_count() + 
+  scale_size_area(max_size = 3) 
+
+table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_test, title = "test", text = TRUE)
+
+table_0000 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
+summary(table_0000, title = "demo By Service", text = TRUE)
+
+
+table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_01, title = "PWB By Age", text = TRUE)
+
+
+table_02 <- tableby(gender_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_02, title = "PWB By Gender", text = TRUE)
+
+
+table_03 <- tableby(degree_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_03, title = "PWB By Degree", text = TRUE)
+
+```
+
+
+
+
+```{r table,include=FALSE}
+#WARNING
+#Still need to provide input parameters such as what test to use and what stats to display
+
+#Part 0, summary stats PWB
+summary(data_vis$Service)
+table_0000 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
+summary(table_0000, title = "demo By Service", text = TRUE)
+
+
+
+table_00 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_00, title = "PWB By Service", text = TRUE)
+
+
+table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_01, title = "PWB By Age", text = TRUE)
+
+
+table_02 <- tableby(gender_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_02, title = "PWB By Gender", text = TRUE)
+
+
+table_03 <- tableby(degree_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_03, title = "PWB By Degree", text = TRUE)
+
+
+table_04 <- tableby(religion_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_04, title = "PWB By Religion", text = TRUE)
+
+
+table_05 <- tableby(gpa_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_05, title = "PWB By GPA", text = TRUE)
+
+
+table_06 <- tableby(gpa_change_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_06, title = "PWB By GPA(change)", text = TRUE)
+
+
+#-------------------------------------------------------
+#Part 1, summary stats for latent
+
+table_10 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_10, title = "Latent By Service", text = TRUE)
+
+table_11 <- tableby(age_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_11, title = "Latent By Age", text = TRUE)
+
+
+table_12 <- tableby(gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_12, title = "Latent By Gender", text = TRUE)
+
+
+table_13 <- tableby(degree_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_13, title = "Latent By Degree", text = TRUE)
+
+
+table_14 <- tableby(religion_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_14, title = "Latent By Religion", text = TRUE)
+
+
+table_15 <- tableby(gpa_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_15, title = "Latent By GPA", text = TRUE)
+
+
+table_16 <- tableby(gpa_change_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_16, title = "Latent By GPA(change)", text = TRUE)
+
+
+#-------------------------------------------------------
+#Part 2, specifics MEMS and SLASIA
+
+table_20 <- tableby(Service ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_20, title = "spec By Service", text = TRUE)
+
+table_21 <- tableby(age_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_21, title = "spec By Age", text = TRUE)
+
+
+table_22 <- tableby(gender_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_22, title = "spec By Gender", text = TRUE)
+
+
+table_23 <- tableby(degree_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_23, title = "spec By Degree", text = TRUE)
+
+
+table_24 <- tableby(religion_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_24, title = "spec By Religion", text = TRUE)
+
+
+table_25 <- tableby(gpa_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_25, title = "spec By GPA", text = TRUE)
+
+
+table_26 <- tableby(gpa_change_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
+summary(table_26, title = "Latent By GPA(change)", text = TRUE)
+
+```
+
+
+
