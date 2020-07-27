@@ -79,6 +79,12 @@ data_vis_pwb <- data_vis %>%
 
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+
+data_vis_mhsat <- data_vis %>%
+  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
+
+
+
 ```
 
 ##Stage II: Overview    
@@ -165,5 +171,33 @@ gpa_change_grp
 
 
 (plot38 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+```
+
+Part 4 fun
+```{r}
+ggplot(data_vis, aes(x = SocSup9, y = ERQ_sup)) + 
+  geom_count() + 
+  scale_size_area(max_size = 3) 
+
+cor(data_vis$SocSup9, data_vis$ERQ_sup)
+
+
+#  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
+
+(plot40 <- ggplot(data_vis_mhsat, aes(x = ServSat, y = Sat_val, fill = as.factor(Service))) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+table_40 <- tableby(Service ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, data = data_vis)
+summary(table_40, title = "Sat By Service", text = TRUE)
+
+
+#health condition
+data_vis_health <- data_vis %>% 
+  mutate(health = ifelse((COVID1 == 1) | (COVID2 == 1) | (COVID3 == 1), "threatened", "okay"))
+
+#summary(as.factor(data_vis$COVID1))
+
+table_41 <- tableby(health ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis_health)
+summary(table_41, title = "Sat By Service", text = TRUE)
 
 ```
