@@ -61,11 +61,7 @@ hist(check2$qc_idx)
 
 ```{r part 1 demo}
 #extra transformation
-data_vis_pwb <- data_vis %>%
-  gather(PWB, PWB_val, PSS_sum:QLES_sum)
 
-data_vis_lt <- data_vis %>%
-  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 #-------------------------------
 
 #part 1.1  finance and tuition

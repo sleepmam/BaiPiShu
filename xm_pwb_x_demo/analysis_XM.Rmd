@@ -39,7 +39,7 @@ data_vis <- data %>%
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
          gender_grp = ifelse(Gender == 1, "Male", 
                       ifelse(Gender == 2, "Female", 
-                      ifelse(Gender < 667, "Spectrum", NA))), 
+                      ifelse(Gender < 667, "Non-binary", NA))), 
          degree_grp = ifelse(Degree == 1, "本科", 
                       ifelse(Degree == 2, "硕士", 
                       ifelse(Degree == 3, "MBA", 
@@ -56,6 +56,15 @@ data_vis <- data %>%
                       ifelse(GradeChange == 3, "c不变", 
                       ifelse(GradeChange == 4, "d变差", 
                       ifelse(GradeChange == 5, "e明显变差", NA))))),
+         sex_o_grp = ifelse(SexOrient == 1, "a异性恋", 
+                      ifelse(SexOrient == 2, "b同性恋", 
+                      ifelse(SexOrient == 3, "c双性恋", 
+                      ifelse(SexOrient == 4, "d泛性恋", 
+                      ifelse(SexOrient == 5, "e无性恋", "其他/不想回答"))))),
+         visa_grp = ifelse(Visa == 1, "a绿卡", 
+                      ifelse(Visa == 2, "b学生", 
+                      ifelse(Visa == 3, "c工作转换", "其他/不想回答"))), 
+         sib_grp = ifelse(Sibling == 0, "a独生子女", "b非独生"), 
          
          MEMS_3 = MEMS1 + MEMS2 + MEMS3,
          
@@ -65,7 +74,11 @@ data_vis <- data %>%
                ifelse(time_new >= as.Date("2020-07-14 05"), "postICE", "duringICE"))
         ) 
 
+data_vis_pwb <- data_vis %>%
+  gather(PWB, PWB_val, PSS_sum:QLES_sum)
 
+data_vis_lt <- data_vis %>%
+  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 ```
 
 ##Stage II: Overview    
@@ -75,5 +88,20 @@ Latent|   x     |     x
 Spec  |   x     |     x    
 MH exp|   x     |    
 
+Part 1. Demo  
+- Summary stats of MH usage by Demo
+- Need some finance info
+```{r}
 
+table_10 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, data = data_vis)
+summary(table_10, title = "demo By Service", text = TRUE)
+
+
+```
+
+Part 2. MH Usage by Demo
+```{r}
+(plot3 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys"))
+
+```
 
