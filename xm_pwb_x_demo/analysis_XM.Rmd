@@ -40,10 +40,10 @@ data_vis <- data %>%
          gender_grp = ifelse(Gender == 1, "Male", 
                       ifelse(Gender == 2, "Female", 
                       ifelse(Gender < 667, "Non-binary", NA))), 
-         degree_grp = ifelse(Degree == 1, "本科", 
-                      ifelse(Degree == 2, "硕士", 
-                      ifelse(Degree == 3, "MBA", 
-                      ifelse(Degree == 4, "博士", NA)))),
+         degree_grp = ifelse(Degree == 1, "a.UnderGrad", 
+                      ifelse(Degree == 2, "b.Master", 
+                      ifelse(Degree == 3, "d.MBA", 
+                      ifelse(Degree == 4, "c.PhD", NA)))),
          religion_grp = ifelse(Religion %in% c(1,2,3,4,5), "教", 
                       ifelse(Religion == 6, "无宗教信仰", NA)),
          gpa_grp = ifelse(GPA == 1, "a.3.8+", 
@@ -91,17 +91,79 @@ MH exp|   x     |
 Part 1. Demo  
 - Summary stats of MH usage by Demo
 - Need some finance info
-```{r}
+```{r demo by service}
 
 table_10 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, data = data_vis)
-summary(table_10, title = "demo By Service", text = TRUE)
 
+my_labels <- list(
+  age_grp = "年龄分组",
+  gender_grp = "性别分组",
+  degree_grp = "学位分组",
+  religion_grp = "宗教分组",
+  sex_o_grp = "性取向分组",
+  sib_grp = "独生子女分组",
+  visa_grp = "身份分组",
+  gpa_grp = "成绩分组",
+  gpa_change_grp = "成绩变化分组"
+)
+
+summary(table_10, title = "demo By Service", labelTranslations = my_labels, text = TRUE)
 
 ```
 
-Part 2. MH Usage by Demo
+Part 2. MH usage by PWB + Latent
 ```{r}
-(plot3 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys"))
+
+table_20 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
+summary(table_20, title = "PWB By Service", text = TRUE)
+
+
+table_21 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
+summary(table_21, title = "Latent By Service", text = TRUE)
+
 
 ```
 
+
+Part 3 PWB across groups
+age_grp
+gender_grp
+degree_grp
+religion_grp
+sex_o_grp 
+sib_grp
+visa_grp
+gpa_grp
+gpa_change_grp
+
+```{r}
+#helper func
+
+
+(plot30 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = age_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot31 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gender_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot32 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = degree_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot33 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = religion_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot34 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sex_o_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot35 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sib_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot36 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = visa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot37 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+
+(plot38 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+
+```
