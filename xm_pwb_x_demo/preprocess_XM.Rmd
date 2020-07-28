@@ -183,7 +183,7 @@ total <- test %>%
     QLES_sum = QLES1 + QLES2 + QLES3,
     
     #Part IV: Latent/Coping
-    ERQ_reap = ERQ1 + ERQ2,
+    ERQ_reap = (ERQ1 + ERQ2) / 2,
     ERQ_sup = ERQ3,
     GSE_sum = GSE1+ GSE2 + GSE3 + GSE4,
     MEMS = MEMS1 + MEMS2 + MEMS3 + MEMS4, # they are from 2 forms
@@ -242,6 +242,7 @@ head(data)
 #look at distribution of time complete
 #x <- data[which(data$TimeComplete < 2000),]
 #ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
+library(dplyr)
 x1 <- data %>%
   filter(TimeComplete < 600) %>%
   select(ID)
@@ -265,12 +266,13 @@ x5 <- data %>%
   filter( Service == 1 & (ServLoc == 0 | ServLang == 0 ))%>%
   select(ID)
  
-x_merged <- as.data.frame(table(c(x1$ID, x2$ID, x3$ID, x4$ID, x5$ID))) %>% filter(Freq > 1) %>% select(Var1)
-
+x_merged <- as.data.frame(table(c(x1$ID, x2$ID, x3$ID, x4$ID, x5$ID))) %>% filter(Freq > 1) 
+head(x_merged, n = 15)
+View(x_merged)
 check_out <- data %>%
   filter(ID %in% x_merged$Var1)
 
-write.csv(check_out,"~/Documents/2020_2Summer/research/0Yale2009/data/output/outlier_df0722_xm0726.csv", row.names = TRUE)
+write.csv(check_out,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0727.csv", row.names = TRUE)
 
-View(check)
+View(check_out)
 ```
