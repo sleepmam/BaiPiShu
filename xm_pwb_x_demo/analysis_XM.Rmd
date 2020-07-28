@@ -27,7 +27,7 @@ library(ggcorrplot)
 library(ggplot2)
 ```
 ```{r import, include=FALSE}
-data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0727.csv", comment.char="#", encoding = "UTF-8")
 
 head(data)
 ```

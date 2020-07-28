@@ -267,10 +267,11 @@ x5 <- data %>%
   select(ID)
  
 x_merged <- as.data.frame(table(c(x1$ID, x2$ID, x3$ID, x4$ID, x5$ID))) %>% filter(Freq > 1) 
-head(x_merged, n = 15)
-View(x_merged)
+#View(x_merged)
+
+
 check_out <- data %>%
-  filter(ID %in% x_merged$Var1)
+  filter(!(ID %in% x_merged$Var1))
 
 write.csv(check_out,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0727.csv", row.names = TRUE)
 
