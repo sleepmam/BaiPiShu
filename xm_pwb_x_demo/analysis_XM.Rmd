@@ -260,24 +260,66 @@ data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_s
 ```
 
 Part 4 fun
-```{r}
+```{r, include = FALSE}
 
-#   scale_fill_brewer(palette="Set3") + 
-#"ServSat1", "ServSat2", "ServSat3", "ServSat4", "ServSat5", "ServSat6", "ServSat7", "ServSat8", "ServSat9"
-#"咨询疗效", "理解倾听", "保密性", "手续简明", "良好沟通", "尊重我", "语言", "时间冲突", "文化适配"
+
 head(data_vis_mhsat$Service)
 data_vis_mhsat$Service <- recode_factor(data_vis_mhsat$Service, '1' = "使用过", '2' = "未使用过")
 data_vis_mhsat$Service <- as.factor(data_vis_mhsat$Service)
-data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "咨询疗效", 'ServSat2' = "理解倾听", 'ServSat3' = "保密性", 'ServSat4' = "手续简明", 'ServSat5' = "良好沟通", 'ServSat6' = "尊重我", 'ServSat7' = "语言", 'ServSat8' = "时间冲突", 'ServSat9' = "文化适配")
+data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "1.咨询疗效", 'ServSat2' = "2.理解倾听", 'ServSat3' = "3.保密性", 'ServSat4' = "4.手续简明", 'ServSat5' = "5.良好沟通", 'ServSat6' = "6.尊重我", 'ServSat7' = "7.语言", 'ServSat8' = "8.时间冲突", 'ServSat9' = "9.文化适配")
 
 #needs error bar
-(plot40 <- ggplot(data_vis_mhsat, aes(x = ServSat, y = Sat_val, fill = Service)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + coord_flip()+ scale_fill_brewer(palette="YlOrBr")+
-  labs(fill = "是否使用过\n心理支持", x = "对应选项", y = "0（无影响），4（非常有影响）", title = "心理支持满意度影响因素") + 
-  theme(text = element_text(family='STKaiti'))+
-    ylim(0,4))
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
 
 
-table_40 <- tableby(Service ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, data = data_vis)
-summary(table_40, title = "Sat By Service", text = TRUE)
+#Error Bar
+data_vis_mhsat_sum <- data_summary(data_vis_mhsat, varname="Sat_val", groupnames=c("ServSat", "Service"))
+
+
+
+
+
+my_labels_mhs <- list(
+  ServSat1 = "1.咨询疗效", 
+  ServSat2 = "2.理解倾听", 
+  ServSat3 = "3.保密性", 
+  ServSat4 = "4.手续简明", 
+  ServSat5 = "5.良好沟通", 
+  ServSat6 = "6.尊重我", 
+  ServSat7 = "7.语言", 
+  ServSat8 = "8.时间冲突", 
+  ServSat9 = "9.文化适配"
+)
+
+table_40 <- tableby(Service ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, 
+                    data = data_vis)
+```
+
+```{r part 4 mh sat}
+(plot40 <- ggplot(data_vis_mhsat_sum, aes(x = ServSat, y = Sat_val, fill = Service)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    geom_errorbar(aes(ymin = Sat_val - se, ymax = Sat_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    scale_fill_brewer(palette="YlOrBr") + ylim(0,4) + coord_flip() + 
+    labs(fill = "是否使用过\n心理支持", x = "对应选项", y = "0（无影响），4（非常有影响）", title = "心理支持满意度影响因素") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=TRUE)))
+
+
+summary(table_40, 
+        title = "Satisfaction By Service", 
+        labelTranslations = my_labels_mhs,
+        text = TRUE)
 
 ```
