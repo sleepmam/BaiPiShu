@@ -34,7 +34,7 @@ head(data)
 
 
 
-```{r transformation, include=FALSE}
+```{r transformation, echo=FALSE}
 data_vis <- data %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
          gender_grp = ifelse(Gender == 1, "Male", 
@@ -80,8 +80,6 @@ data_vis_pwb <- data_vis %>%
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
-data_vis_mhsat <- data_vis %>%
-  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
 
 
 
@@ -137,7 +135,7 @@ summary(table_10, title = "demo By Service", labelTranslations = my_labels, text
 ```
 
 Part 2. MH usage by PWB + Latent
-```{r PWB, include = FALSE}
+```{r PWB prep, include = FALSE}
 
 my_controls_pwb <- tableby.control(
   test = T,
@@ -193,31 +191,6 @@ gpa_change_grp
 #helper func
 
 
-plot30 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = age_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
-
-
-plot31 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gender_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
-
-
-plot32 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = degree_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3") + ggtitle("PWB by Degree")
-
-
-plot33 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = religion_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
-
-
-plot34 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sex_o_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
-
-
-plot35 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sib_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
-
-
-plot36 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = visa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
-
-
-plot37 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys")
-
-
-plot38 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys")
 
 my_controls_pwb2 <- tableby.control(
   test = T,
@@ -260,10 +233,10 @@ data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_s
 ```
 
 Part 4 fun
-```{r, include = FALSE}
+```{r, echo = FALSE}
+data_vis_mhsat <- data_vis %>%
+  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
 
-
-head(data_vis_mhsat$Service)
 data_vis_mhsat$Service <- recode_factor(data_vis_mhsat$Service, '1' = "使用过", '2' = "未使用过")
 data_vis_mhsat$Service <- as.factor(data_vis_mhsat$Service)
 data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "1.咨询疗效", 'ServSat2' = "2.理解倾听", 'ServSat3' = "3.保密性", 'ServSat4' = "4.手续简明", 'ServSat5' = "5.良好沟通", 'ServSat6' = "6.尊重我", 'ServSat7' = "7.语言", 'ServSat8' = "8.时间冲突", 'ServSat9' = "9.文化适配")
