@@ -52,7 +52,14 @@ dim(df)
 
 data_0722_t <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/final0722/072220_text.xlsx") #process and append to ID
 
-df_f <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource)
+
+data_0722_t$SI1 <- recode_factor(data_0722_t$SI1, 'a.是' = 1, 'b.否' = 0, 'c.不想回答' = 999)
+data_0722_t$SI2 <- recode_factor(data_0722_t$SI2, 'a.没有' = 1, 'b.偶尔' = 2, 'c.有时' = 3, 'd.经常' = 4, 'e.总是' = 5, 'h.不想回答' = 999, '(跳过)' = 0)
+summary(data_0722_t$SI2)
+
+
+df_f <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource, SI1, SI2)
+
 
 combo <- df_f %>%
   mutate(
@@ -198,7 +205,8 @@ total <- test %>%
     COV_Psy_sum = COV_Psy1 + COV_Psy2 + COV_Psy3 + COV_Psy4 + COV_Psy5 + COV_Psy6,
     COV_Pos_sum = COV_Pos1 + COV_Pos2 + COV_Pos3 + COV_Pos4 + COV_Pos5 + COV_Pos6 + COV_Pos7,
     COV_Stress_sum = COV_Stress1 + COV_Stress2 + COV_Stress3 + COV_Stress4 + COV_Stress5 + COV_Stress6 + COV_Stress7 + COV_Stress8 + COV_Stress9
-         )
+         ) %>%
+  select(-c(SI1, SI2))
 
 ```
 
@@ -220,13 +228,13 @@ total <- test %>%
 combine <- left_join(total, combo, by = "ID")
 head(combine)
 
-bps_df0722_xm0725 <- combine
-write.csv(bps_df0722_xm0725,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", row.names = TRUE)
+bps_df0722_xm0728 <- combine
+write.csv(bps_df0722_xm0728,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728.csv", row.names = TRUE)
 
 #write.csv(df,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0710_xm0714.csv", row.names = TRUE)
 
 #testing
-data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0725.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728.csv", comment.char="#", encoding = "UTF-8")
 
 head(data)
 ```
@@ -273,7 +281,7 @@ x_merged <- as.data.frame(table(c(x1$ID, x2$ID, x3$ID, x4$ID, x5$ID))) %>% filte
 check_out <- data %>%
   filter(!(ID %in% x_merged$Var1))
 
-write.csv(check_out,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0727.csv", row.names = TRUE)
+write.csv(check_out,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728pm.csv", row.names = TRUE)
 
 View(check_out)
 ```
