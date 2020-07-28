@@ -28,6 +28,31 @@ library(ggplot2)
 ```
 
 
+
+```{r 0728}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```{r filter}
 
 check <- data %>%

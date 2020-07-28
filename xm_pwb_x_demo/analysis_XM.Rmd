@@ -4,6 +4,7 @@ author: "marshall ma"
 date: "7/10/2020"
 output:
   html_document: default
+  pdf_document: default
   word_document: default
 ---
 
@@ -86,11 +87,6 @@ data_vis_lt <- data_vis %>%
 ```
 
 ##Stage II: Overview    
-      |  demo   |   MH exp |    
-PWB   |   x     |     x    
-Latent|   x     |     x    
-Spec  |   x     |     x    
-MH exp|   x     |    
 
 Part 1. Demo  
 - Summary stats of MH usage by Demo
@@ -205,43 +201,7 @@ my_controls_pwb2 <- tableby.control(
 ```
 
 ```{r PWB across grps, echo = FALSE}
-#degree by PWB
-(plot32 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = degree_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="YlOrBr") +
-  labs(fill = "学历", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
-  theme(text = element_text(family='STKaiti')))
 
-
-#summary stats -> too many groups
-table_30 <- tableby(sex_o_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
-                    control = my_controls_pwb2,
-                    data = data_vis)
-summary(table_30, 
-        title = "Latent By Service", 
-        labelTranslations = my_labels_pwb, 
-        text = TRUE)
-
-#fill with summary stats & error bar
-data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_sum' = "压力", 'PHQ_sum' = "焦虑", 'SWLS_sum' = "生活幸福感", 'QLES_sum' = "生活质量")
-
-(plot37 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="YlOrBr") +
-  labs(fill = "GPA分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩分组）") + 
-  theme(text = element_text(family='STKaiti')))
-
-(plot38 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="YlOrBr")+
-  labs(fill = "GPA变化分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩变化分组）") + 
-  theme(text = element_text(family='STKaiti')))
-```
-
-Part 4 fun
-```{r, echo = FALSE}
-data_vis_mhsat <- data_vis %>%
-  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
-
-data_vis_mhsat$Service <- recode_factor(data_vis_mhsat$Service, '1' = "使用过", '2' = "未使用过")
-data_vis_mhsat$Service <- as.factor(data_vis_mhsat$Service)
-data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "1.咨询疗效", 'ServSat2' = "2.理解倾听", 'ServSat3' = "3.保密性", 'ServSat4' = "4.手续简明", 'ServSat5' = "5.良好沟通", 'ServSat6' = "6.尊重我", 'ServSat7' = "7.语言", 'ServSat8' = "8.时间冲突", 'ServSat9' = "9.文化适配")
-
-#needs error bar
 
 data_summary <- function(data, varname, groupnames){
   require(plyr)
@@ -257,12 +217,72 @@ data_summary <- function(data, varname, groupnames){
 }
 
 
+#degree by PWB
+data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "degree_grp"))  %>% drop_na()
+
+plot32 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = degree_grp)) + 
+  geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "学历", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  guides(fill = guide_legend(reverse=TRUE)) + 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+  guides(fill = guide_legend(reverse=FALSE))
+plot32
+
+#summary stats -> too many groups
+table_30 <- tableby(sex_o_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
+                    control = my_controls_pwb2,
+                    data = data_vis)
+summary(table_30, 
+        title = "Latent By Service", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+
+#fill with summary stats & error bar
+data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_sum' = "压力", 'PHQ_sum' = "焦虑", 'SWLS_sum' = "生活幸福感", 'QLES_sum' = "生活质量")
+
+
+data_vis_pwb_sum1 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gpa_grp"))  %>% drop_na()
+
+plot37 <- ggplot(data_vis_pwb_sum1, aes(x = PWB, y = PWB_val, fill = gpa_grp)) +
+  geom_bar(position = "dodge", stat = "summary", fun = mean) +
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "GPA分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩分组）") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  guides(fill = guide_legend(reverse=TRUE)) + 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+  guides(fill = guide_legend(reverse=FALSE))
+plot37
+
+
+
 #Error Bar
-data_vis_mhsat_sum <- data_summary(data_vis_mhsat, varname="Sat_val", groupnames=c("ServSat", "Service"))
+data_vis_pwb_sum2 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gpa_change_grp"))
+
+plot38 <- ggplot(data_vis_pwb_sum2, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    scale_fill_brewer(palette="YlOrBr") +
+    labs(fill = "GPA变化分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩变化分组）") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=TRUE)) + 
+    geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    guides(fill = guide_legend(reverse=FALSE))
+plot38
 
 
 
+```
 
+Part 4 fun
+```{r, echo = FALSE}
+
+data_vis_mhsat <- data_vis %>%
+  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
+
+data_vis_mhsat$Service <- recode_factor(data_vis_mhsat$Service, '1' = "使用过", '2' = "未使用过")
+data_vis_mhsat$Service <- as.factor(data_vis_mhsat$Service)
+data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "1.咨询疗效", 'ServSat2' = "2.理解倾听", 'ServSat3' = "3.保密性", 'ServSat4' = "4.手续简明", 'ServSat5' = "5.良好沟通", 'ServSat6' = "6.尊重我", 'ServSat7' = "7.语言", 'ServSat8' = "8.时间冲突", 'ServSat9' = "9.文化适配")
 
 my_labels_mhs <- list(
   ServSat1 = "1.咨询疗效", 
@@ -281,13 +301,31 @@ table_40 <- tableby(Service ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSa
 ```
 
 ```{r part 4 mh sat}
-(plot40 <- ggplot(data_vis_mhsat_sum, aes(x = ServSat, y = Sat_val, fill = Service)) + 
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+
+#Error Bar
+data_vis_mhsat_sum <- data_summary(data_vis_mhsat, varname= "Sat_val", groupnames=c("ServSat", "Service"))
+
+plot40 <- ggplot(data_vis_mhsat_sum, aes(x = ServSat, y = Sat_val, fill = Service)) + 
     geom_bar(position = "dodge", stat = "summary", fun = mean) + 
     geom_errorbar(aes(ymin = Sat_val - se, ymax = Sat_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
     scale_fill_brewer(palette="YlOrBr") + ylim(0,4) + coord_flip() + 
     labs(fill = "是否使用过\n心理支持", x = "对应选项", y = "0（无影响），4（非常有影响）", title = "心理支持满意度影响因素") + 
     theme(text = element_text(family='STKaiti', size=14, face="bold")) +
-    guides(fill = guide_legend(reverse=TRUE)))
+    guides(fill = guide_legend(reverse=TRUE))
 
 
 summary(table_40, 
