@@ -126,8 +126,8 @@ my_labels <- list(
 
 ```{r demo}
 summary(table_00, title = "demo only", labelTranslations = my_labels, text = TRUE)
-
 summary(table_10, title = "demo By Service", labelTranslations = my_labels, text = TRUE)
+
 ```
 
 Part 2. MH usage by PWB + Latent
@@ -171,7 +171,7 @@ summary(table_21,
         text = TRUE)
 
 ```
-Part 3 PWB across groups
+Part 2 PWB across groups
 age_grp
 gender_grp
 degree_grp
@@ -182,12 +182,7 @@ visa_grp
 gpa_grp
 gpa_change_grp
 
-
 ```{r, include = FALSE}
-#helper func
-
-
-
 my_controls_pwb2 <- tableby.control(
   test = T,
   total = T,
@@ -198,28 +193,41 @@ my_controls_pwb2 <- tableby.control(
     meansd = "Mean (SD)"
   ))
 
-```
-
-```{r PWB across grps, echo = FALSE}
-
-
 #summary stats -> too many groups
-table_30 <- tableby(
+table_22 <- tableby(
   sex_o_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
   control = my_controls_pwb2,
   data = data_vis
   )
+```
 
-summary(table_30, 
+```{r PWB across grps}
+summary(table_22, 
         title = "Latent By Service", 
         labelTranslations = my_labels_pwb, 
         text = TRUE)
+```
 
+Part 3 Latent across grps
+
+```{r, include = FALSE}
+table_30 <- tableby(
+  gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
+  control = my_controls_pwb2,
+  data = data_vis
+  )
 
 ```
 
+```{r Lt across grps}
+summary(table_30, 
+        title = "Latent By Gender", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+```
+
 Part 4 fun
-```{r, echo = FALSE}
+```{r, include = FALSE}
 
 my_labels_mhs <- list(
   ServSat1 = "1.咨询疗效", 
@@ -235,13 +243,31 @@ my_labels_mhs <- list(
 
 table_40 <- tableby(Service ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, 
                     data = data_vis)
+
+table_41 <- tableby(gender_grp ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, 
+                    data = data_vis)
+
+table_42 <- tableby(degree_grp ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, 
+                    data = data_vis)
+
+#table_43 <- tableby(gpa_grp ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, data = data_vis)
 ```
 
 ```{r part 4 mh sat}
-
 summary(table_40, 
         title = "Satisfaction By Service", 
         labelTranslations = my_labels_mhs,
         text = TRUE)
+
+summary(table_41, 
+        title = "Satisfaction By Gender", 
+        labelTranslations = my_labels_mhs,
+        text = TRUE)
+
+summary(table_42, 
+        title = "Satisfaction By Degree", 
+        labelTranslations = my_labels_mhs,
+        text = TRUE)
+
 
 ```

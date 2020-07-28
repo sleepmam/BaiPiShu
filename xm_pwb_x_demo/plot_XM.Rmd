@@ -170,6 +170,18 @@ plot38 <- ggplot(data_vis_pwb_sum2, aes(x = PWB, y = PWB_val, fill = gpa_change_
 plot38
 
 
+#Error Bar
+data_vis_pwb_sum3 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gender_grp")) %>% drop_na()
+
+plot39 <- ggplot(data_vis_pwb_sum3, aes(x = PWB, y = PWB_val, fill = gender_grp)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    scale_fill_brewer(palette="YlOrBr") +
+    labs(fill = "性别分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按性别分组）") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=TRUE)) + 
+    geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    guides(fill = guide_legend(reverse=FALSE))
+plot39
 
 ```
 
@@ -187,18 +199,6 @@ data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "1.
 
 ```{r part 4 mh sat}
 
-data_summary <- function(data, varname, groupnames){
-  require(plyr)
-  summary_func <- function(x, col){
-    c(mean = mean(x[[col]], na.rm=TRUE),
-      sd = sd(x[[col]], na.rm=TRUE),
-      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
-  } #need to check se correctness
-  data_sum<-ddply(data, groupnames, .fun=summary_func,
-                  varname)
-  data_sum <- rename(data_sum, c("mean" = varname))
- return(data_sum)
-}
 
 
 #Error Bar
@@ -212,5 +212,17 @@ plot40 <- ggplot(data_vis_mhsat_sum, aes(x = ServSat, y = Sat_val, fill = Servic
     theme(text = element_text(family='STKaiti', size=14, face="bold")) +
     guides(fill = guide_legend(reverse=TRUE))
 
+
+data_vis_mhsat_sum1 <- data_summary(data_vis_mhsat, varname= "Sat_val", groupnames=c("ServSat", "gpa_grp"))%>% drop_na()
+
+plot41 <- ggplot(data_vis_mhsat_sum1, aes(x = ServSat, y = Sat_val, fill = gpa_grp)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    geom_errorbar(aes(ymin = Sat_val - se, ymax = Sat_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    scale_fill_brewer(palette="YlOrBr") + ylim(0,4) +  
+    labs(fill = "GPA分组", x = "对应选项", y = "0（无影响），4（非常有影响）", title = "心理支持满意度影响因素（GPA分组）") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=FALSE))
+
+plot41
 
 ```
