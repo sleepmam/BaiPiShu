@@ -97,9 +97,24 @@ MH exp|   x     |
 Part 1. Demo  
 - Summary stats of MH usage by Demo
 - Need some finance info
-```{r demo by service}
+```{r demo by service, include = FALSE}
 
-table_10 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, data = data_vis)
+my_controls <- tableby.control(
+  test = T,
+  total = T,
+  numeric.test = "anova",
+  cat.test = "chisq",
+  cat.stats = c("countpct", "Nmiss2"),
+  stats.labels = list(Nmiss2 = "Missing")
+)
+
+table_00 <- tableby(~age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
+                    data = data_vis,
+                    control = my_controls)
+
+table_10 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
+                    data = data_vis,
+                    control = my_controls)
 
 my_labels <- list(
   age_grp = "年龄分组",
@@ -113,24 +128,63 @@ my_labels <- list(
   gpa_change_grp = "成绩变化分组"
 )
 
-summary(table_10, title = "demo By Service", labelTranslations = my_labels, text = TRUE)
+```
 
+```{r demo}
+summary(table_00, title = "demo only", labelTranslations = my_labels, text = TRUE)
+
+summary(table_10, title = "demo By Service", labelTranslations = my_labels, text = TRUE)
 ```
 
 Part 2. MH usage by PWB + Latent
-```{r}
+```{r PWB, include = FALSE}
 
-table_20 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_20, title = "PWB By Service", text = TRUE)
+my_controls_pwb <- tableby.control(
+  test = T,
+  total = T,
+  numeric.test = "anova",
+  numeric.stats = c("meansd"),
+  cat.stats = c("countpct", "Nmiss2"),
+  stats.labels = list(
+    meansd = "Mean (SD)"
+  ))
+
+my_labels_pwb <- list(
+  PHQ_sum = "抑郁指数",
+  GAD_sum = "焦虑指数",
+  PSS_sum = "压力指数",
+  SWLS_sum = "生活满意度",
+  QLES_sum = "生活质量",
+  SCOFF_nervosa = "厌食指数"
+)
+table_20 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
+                    control = my_controls_pwb,
+                    data = data_vis)
 
 
-table_21 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_21, title = "Latent By Service", text = TRUE)
+
+
+
+table_21 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
+                    control = my_controls_pwb,
+                    data = data_vis)
+
 
 
 ```
 
+```{r PWB}
 
+summary(table_20, 
+        title = "PWB By Service", 
+        labelTranslations = my_labels_pwb,
+        text = TRUE)
+summary(table_21, 
+        title = "Latent By Service", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+
+```
 Part 3 PWB across groups
 age_grp
 gender_grp
