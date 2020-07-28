@@ -27,7 +27,7 @@ library(ggcorrplot)
 library(ggplot2)
 ```
 ```{r import, include=FALSE}
-data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0727.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728pm.csv", comment.char="#", encoding = "UTF-8")
 
 head(data)
 ```
@@ -75,7 +75,7 @@ data_vis <- data %>%
         ) 
 
 data_vis_pwb <- data_vis %>%
-  gather(PWB, PWB_val, PSS_sum:QLES_sum)
+  gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
 
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
@@ -160,17 +160,9 @@ my_labels_pwb <- list(
 table_20 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
                     control = my_controls_pwb,
                     data = data_vis)
-
-
-
-
-
 table_21 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
                     control = my_controls_pwb,
                     data = data_vis)
-
-
-
 ```
 
 ```{r PWB}
@@ -196,62 +188,96 @@ visa_grp
 gpa_grp
 gpa_change_grp
 
-```{r}
+
+```{r, include = FALSE}
 #helper func
 
 
-(plot30 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = age_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot30 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = age_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
 
 
-(plot31 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gender_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot31 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gender_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
 
 
-(plot32 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = degree_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot32 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = degree_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3") + ggtitle("PWB by Degree")
 
 
-(plot33 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = religion_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot33 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = religion_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
 
 
-(plot34 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sex_o_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot34 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sex_o_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
 
 
-(plot35 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sib_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot35 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = sib_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
 
 
-(plot36 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = visa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot36 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = visa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3")
 
 
-(plot37 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot37 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys")
 
 
-(plot38 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
+plot38 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys")
 
+my_controls_pwb2 <- tableby.control(
+  test = T,
+  total = T,
+  numeric.test = "anova",
+  numeric.stats = c("meansd"),
+  cat.stats = c("countpct", "Nmiss2"),
+  stats.labels = list(
+    meansd = "Mean (SD)"
+  ))
+
+```
+
+```{r PWB across grps, echo = FALSE}
+#degree by PWB
+(plot32 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = degree_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "学历", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
+  theme(text = element_text(family='STKaiti')))
+
+
+#summary stats -> too many groups
+table_30 <- tableby(sex_o_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
+                    control = my_controls_pwb2,
+                    data = data_vis)
+summary(table_30, 
+        title = "Latent By Service", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+
+#fill with summary stats & error bar
+data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_sum' = "压力", 'PHQ_sum' = "焦虑", 'SWLS_sum' = "生活幸福感", 'QLES_sum' = "生活质量")
+
+(plot37 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "GPA分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩分组）") + 
+  theme(text = element_text(family='STKaiti')))
+
+(plot38 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="YlOrBr")+
+  labs(fill = "GPA变化分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩变化分组）") + 
+  theme(text = element_text(family='STKaiti')))
 ```
 
 Part 4 fun
 ```{r}
-ggplot(data_vis, aes(x = SocSup9, y = ERQ_sup)) + 
-  geom_count() + 
-  scale_size_area(max_size = 3) 
 
-cor(data_vis$SocSup9, data_vis$ERQ_sup)
+#   scale_fill_brewer(palette="Set3") + 
+#"ServSat1", "ServSat2", "ServSat3", "ServSat4", "ServSat5", "ServSat6", "ServSat7", "ServSat8", "ServSat9"
+#"咨询疗效", "理解倾听", "保密性", "手续简明", "良好沟通", "尊重我", "语言", "时间冲突", "文化适配"
+head(data_vis_mhsat$Service)
+data_vis_mhsat$Service <- recode_factor(data_vis_mhsat$Service, '1' = "使用过", '2' = "未使用过")
+data_vis_mhsat$Service <- as.factor(data_vis_mhsat$Service)
+data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "咨询疗效", 'ServSat2' = "理解倾听", 'ServSat3' = "保密性", 'ServSat4' = "手续简明", 'ServSat5' = "良好沟通", 'ServSat6' = "尊重我", 'ServSat7' = "语言", 'ServSat8' = "时间冲突", 'ServSat9' = "文化适配")
 
+#needs error bar
+(plot40 <- ggplot(data_vis_mhsat, aes(x = ServSat, y = Sat_val, fill = Service)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + coord_flip()+ scale_fill_brewer(palette="YlOrBr")+
+  labs(fill = "是否使用过\n心理支持", x = "对应选项", y = "0（无影响），4（非常有影响）", title = "心理支持满意度影响因素") + 
+  theme(text = element_text(family='STKaiti'))+
+    ylim(0,4))
 
-#  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
-
-(plot40 <- ggplot(data_vis_mhsat, aes(x = ServSat, y = Sat_val, fill = as.factor(Service))) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Set3"))
 
 table_40 <- tableby(Service ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, data = data_vis)
 summary(table_40, title = "Sat By Service", text = TRUE)
-
-
-#health condition
-data_vis_health <- data_vis %>% 
-  mutate(health = ifelse((COVID1 == 1) | (COVID2 == 1) | (COVID3 == 1), "threatened", "okay"))
-
-#summary(as.factor(data_vis$COVID1))
-
-table_41 <- tableby(health ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis_health)
-summary(table_41, title = "Sat By Service", text = TRUE)
 
 ```
