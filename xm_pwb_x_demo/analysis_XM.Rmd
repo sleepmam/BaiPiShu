@@ -88,6 +88,16 @@ data_vis_lt <- data_vis %>%
 
 ##Stage II: Overview    
 
+        | demo | Mh usage  |  
+--------|------|-----------|-----
+demo    | pt1  |-----------|-----
+MH use  | pt1  |-----------|-----
+PWB     | pt2  |---pt2-----|-----
+Latent  | pt3  |---pt2-----|-----
+Sat     | pt4  |---pt4-----|-----
+
+
+
 Part 1. Demo  
 - Summary stats of MH usage by Demo
 - Need some finance info
@@ -203,7 +213,7 @@ table_22 <- tableby(
 
 ```{r PWB across grps}
 summary(table_22, 
-        title = "Latent By Service", 
+        title = "PWB By Demo - Sex Orient", 
         labelTranslations = my_labels_pwb, 
         text = TRUE)
 ```
