@@ -52,9 +52,16 @@ dim(df)
 
 data_0722_t <- read_excel("Documents/2020_2Summer/research/0Yale2009/data/final0722/072220_text.xlsx") #process and append to ID
 
-df <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource)
 
-combo <- df %>%
+data_0722_t$SI1 <- recode_factor(data_0722_t$SI1, 'a.是' = 1, 'b.否' = 0, 'c.不想回答' = 999)
+data_0722_t$SI2 <- recode_factor(data_0722_t$SI2, 'a.没有' = 1, 'b.偶尔' = 2, 'c.有时' = 3, 'd.经常' = 4, 'e.总是' = 5, 'h.不想回答' = 999, '(跳过)' = 0)
+summary(data_0722_t$SI2)
+
+
+df_f <- as.data.frame(data_0722_t)[,-c(283:289)] %>% select(ID, Tuition, FinSource, SI1, SI2)
+
+
+combo <- df_f %>%
   mutate(
     fin1_fam = ifelse(str_detect(FinSource, "a."), 1, 0),
     fin2_gov = ifelse(str_detect(FinSource, "b."), 1, 0),
@@ -69,32 +76,10 @@ combo <- df %>%
     tui4_in = ifelse(str_detect(Tuition, "d."), 1, 0),
     tui5_out = ifelse(str_detect(Tuition, "e."), 1, 0),
     tui6_other = ifelse(str_detect(Tuition, "f."), 1, 0),
-    tui_sum = as.factor(tui1_sch + tui2_fam + tui3_gov  + tui4_in + tui5_out + tui6_other)
-  )
+    tui_sum = as.factor(tui1_sch + tui2_fam + tui3_gov  + tui4_in + tui5_out + tui6_other),
+    ID = as.double(ID)
+  ) %>% select(-c(Tuition, FinSource))
 head(combo)
-
-x <- combo %>% summarise(n = count(tui_sum)) 
-head(x)
-a <- x$n
-a$x
-x = as.data.frame(x)
-typeof(x$n)
-
-
-summary(combo$tui_sum)
-summary(combo$fin_sum)
-which(combo$fin_sum == 0)
-
-
-#120 307
-ggplot(combo, aes(x = tui_sum)) + 
-  geom_bar(stat="count", position = "dodge") 
-
-ggplot(combo, aes(x=factor(1), fill=tui_sum)) +
-  geom_bar(width = 1) +
-  coord_polar("y") +
-  theme_minimal() + 
-  scale_fill_grey() 
 
 
 ```
@@ -205,7 +190,7 @@ total <- test %>%
     QLES_sum = QLES1 + QLES2 + QLES3,
     
     #Part IV: Latent/Coping
-    ERQ_reap = ERQ1 + ERQ2,
+    ERQ_reap = (ERQ1 + ERQ2) / 2,
     ERQ_sup = ERQ3,
     GSE_sum = GSE1+ GSE2 + GSE3 + GSE4,
     MEMS = MEMS1 + MEMS2 + MEMS3 + MEMS4, # they are from 2 forms
@@ -220,7 +205,8 @@ total <- test %>%
     COV_Psy_sum = COV_Psy1 + COV_Psy2 + COV_Psy3 + COV_Psy4 + COV_Psy5 + COV_Psy6,
     COV_Pos_sum = COV_Pos1 + COV_Pos2 + COV_Pos3 + COV_Pos4 + COV_Pos5 + COV_Pos6 + COV_Pos7,
     COV_Stress_sum = COV_Stress1 + COV_Stress2 + COV_Stress3 + COV_Stress4 + COV_Stress5 + COV_Stress6 + COV_Stress7 + COV_Stress8 + COV_Stress9
-         )
+         ) %>%
+  select(-c(SI1, SI2))
 
 ```
 
@@ -238,13 +224,64 @@ total <- test %>%
 
 #today's output
 
-bps_df0722_xm0722 <- total
-write.csv(bps_df0722_xm0722,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", row.names = TRUE)
+#left join combo, total
+combine <- left_join(total, combo, by = "ID")
+head(combine)
+
+bps_df0722_xm0728 <- combine
+write.csv(bps_df0722_xm0728,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728.csv", row.names = TRUE)
 
 #write.csv(df,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0710_xm0714.csv", row.names = TRUE)
 
 #testing
-abc <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728.csv", comment.char="#", encoding = "UTF-8")
 
-head(abc)
+head(data)
+```
+
+##Stage I: Filtering
+1. 时间低于10分钟。   
+2. PSS: 所有题目得分一致。  
+3. PHQ第10题和前9题逻辑不一致。  
+4. 没有使用心理咨询等服务却选了满意度（没有选“不适用”）。  
+
+```{r filter, include=FALSE}
+
+#look at distribution of time complete
+#x <- data[which(data$TimeComplete < 2000),]
+#ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
+library(dplyr)
+x1 <- data %>%
+  filter(TimeComplete < 600) %>%
+  select(ID)
+
+x2 <- data %>%
+  filter((PHQ_sum == 0 & PHQ10 != 999) | (PHQ_sum > 0 & PHQ10 == 999)) %>%
+  select(ID)
+x2$ID
+
+x3 <- data %>%
+  mutate(PSS_dif = (PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6) / 6 - (PSS7 + PSS8 + PSS9 + PSS10) / 4) %>%
+  filter(abs(PSS_dif - mean(PSS_dif)) > 3*sd(PSS_dif))%>%
+  select(ID)
+  
+#no output
+x4 <- data %>%
+  filter(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0)) %>%
+  select(ID)
+
+x5 <- data %>%
+  filter( Service == 1 & (ServLoc == 0 | ServLang == 0 ))%>%
+  select(ID)
+ 
+x_merged <- as.data.frame(table(c(x1$ID, x2$ID, x3$ID, x4$ID, x5$ID))) %>% filter(Freq > 1) 
+#View(x_merged)
+
+
+check_out <- data %>%
+  filter(!(ID %in% x_merged$Var1))
+
+write.csv(check_out,"~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728pm.csv", row.names = TRUE)
+
+View(check_out)
 ```

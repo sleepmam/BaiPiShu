@@ -1,0 +1,244 @@
+---
+title: "baipishu"
+author: "marshall ma"
+date: "7/10/2020"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r tools, include=FALSE}
+#manipulation and cleaning
+library(tidyr)
+library(plyr)
+library(stringr)
+library(lubridate)
+library(data.table)
+library(dplyr)
+
+#visualization
+library(psych)
+library(naniar)
+library(arsenal)
+library(ggcorrplot)
+library(ggplot2)
+```
+```{r import, include=FALSE}
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728pm.csv", comment.char="#", encoding = "UTF-8")
+
+head(data)
+```
+
+
+
+```{r transformation, echo=FALSE}
+
+data_vis <- data %>% 
+  mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
+         gender_grp = ifelse(Gender == 1, "Male", 
+                      ifelse(Gender == 2, "Female", 
+                      ifelse(Gender < 667, "Non-binary", NA))), 
+         degree_grp = ifelse(Degree == 1, "a.UnderGrad", 
+                      ifelse(Degree == 2, "b.Master", 
+                      ifelse(Degree == 3, "d.MBA", 
+                      ifelse(Degree == 4, "c.PhD", NA)))),
+         religion_grp = ifelse(Religion %in% c(1,2,3,4,5), "教", 
+                      ifelse(Religion == 6, "无宗教信仰", NA)),
+         gpa_grp = ifelse(GPA == 1, "a.3.8+", 
+                      ifelse(GPA == 2, "b.3.5-3.8", 
+                      ifelse(GPA == 3, "c.3.3-3.5", 
+                      ifelse(GPA == 4, "d.3.0-3.3", 
+                      ifelse(GPA == 5, "e.3-", NA))))),
+         gpa_change_grp = ifelse(GradeChange == 1, "a明显变好", 
+                      ifelse(GradeChange == 2, "b变好", 
+                      ifelse(GradeChange == 3, "c不变", 
+                      ifelse(GradeChange == 4, "d变差", 
+                      ifelse(GradeChange == 5, "e明显变差", NA))))),
+         sex_o_grp = ifelse(SexOrient == 1, "a异性恋", 
+                      ifelse(SexOrient == 2, "b同性恋", 
+                      ifelse(SexOrient == 3, "c双性恋", 
+                      ifelse(SexOrient == 4, "d泛性恋", 
+                      ifelse(SexOrient == 5, "e无性恋", "其他/不想回答"))))),
+         visa_grp = ifelse(Visa == 1, "a绿卡", 
+                      ifelse(Visa == 2, "b学生", 
+                      ifelse(Visa == 3, "c工作转换", "其他/不想回答"))), 
+         sib_grp = ifelse(Sibling == 0, "a独生子女", "b非独生"), 
+         
+         MEMS_3 = MEMS1 + MEMS2 + MEMS3,
+         
+         #sometime
+         time_new = ymd_hms(TimeSubmit), time_day = as.Date(TimeSubmit),
+         ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "before", 
+               ifelse(time_new >= as.Date("2020-07-14 05"), "after", "during"))
+        ) 
+
+data_vis_pwb <- data_vis %>%
+  gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
+
+data_vis_lt <- data_vis %>%
+  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+
+
+
+
+```
+
+##Stage II: Overview    
+
+Part 1. Demo  
+- Summary stats of MH usage by Demo
+- Need some finance info
+
+Part 2. MH usage by PWB + Latent
+
+Part 3 PWB across groups
+age_grp
+gender_grp
+degree_grp
+religion_grp
+sex_o_grp 
+sib_grp
+visa_grp
+gpa_grp
+gpa_change_grp
+
+```{r ICE check}
+
+my_controls <- tableby.control(
+  test = T,
+  total = T,
+  cat.test = "chisq",
+  cat.stats = c("countpct", "Nmiss2"),
+  stats.labels = list(Nmiss2 = "Missing")
+)
+table_10 <- tableby(ICE ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
+                    data = data_vis,
+                    control = my_controls)
+summary(table_10, title = "demo by ICE", text = TRUE)
+
+
+```
+
+```{r PWB across grps, echo = FALSE}
+
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
+
+
+#degree by PWB
+data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "degree_grp"))  %>% drop_na()
+
+plot32 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = degree_grp)) + 
+  geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "学历", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  guides(fill = guide_legend(reverse=TRUE)) + 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+  guides(fill = guide_legend(reverse=FALSE))
+plot32
+
+
+#fill with summary stats & error bar
+data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_sum' = "压力", 'PHQ_sum' = "焦虑", 'SWLS_sum' = "生活幸福感", 'QLES_sum' = "生活质量")
+
+
+data_vis_pwb_sum1 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gpa_grp"))  %>% drop_na()
+
+plot37 <- ggplot(data_vis_pwb_sum1, aes(x = PWB, y = PWB_val, fill = gpa_grp)) +
+  geom_bar(position = "dodge", stat = "summary", fun = mean) +
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "GPA分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩分组）") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  guides(fill = guide_legend(reverse=TRUE)) + 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+  guides(fill = guide_legend(reverse=FALSE))
+plot37
+
+
+
+#Error Bar
+data_vis_pwb_sum2 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gpa_change_grp"))
+
+plot38 <- ggplot(data_vis_pwb_sum2, aes(x = PWB, y = PWB_val, fill = gpa_change_grp)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    scale_fill_brewer(palette="YlOrBr") +
+    labs(fill = "GPA变化分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩变化分组）") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=TRUE)) + 
+    geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    guides(fill = guide_legend(reverse=FALSE))
+plot38
+
+
+#Error Bar
+data_vis_pwb_sum3 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gender_grp")) %>% drop_na()
+
+plot39 <- ggplot(data_vis_pwb_sum3, aes(x = PWB, y = PWB_val, fill = gender_grp)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    scale_fill_brewer(palette="YlOrBr") +
+    labs(fill = "性别分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按性别分组）") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=TRUE)) + 
+    geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    guides(fill = guide_legend(reverse=FALSE))
+plot39
+
+```
+
+Part 4 fun
+```{r, echo = FALSE}
+
+data_vis_mhsat <- data_vis %>%
+  gather(ServSat, Sat_val, c(ServSat1:ServSat9))
+
+data_vis_mhsat$Service <- recode_factor(data_vis_mhsat$Service, '1' = "使用过", '2' = "未使用过")
+data_vis_mhsat$Service <- as.factor(data_vis_mhsat$Service)
+data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "1.咨询疗效", 'ServSat2' = "2.理解倾听", 'ServSat3' = "3.保密性", 'ServSat4' = "4.手续简明", 'ServSat5' = "5.良好沟通", 'ServSat6' = "6.尊重我", 'ServSat7' = "7.语言", 'ServSat8' = "8.时间冲突", 'ServSat9' = "9.文化适配")
+
+```
+
+```{r part 4 mh sat}
+
+
+
+#Error Bar
+data_vis_mhsat_sum <- data_summary(data_vis_mhsat, varname= "Sat_val", groupnames=c("ServSat", "Service"))
+
+plot40 <- ggplot(data_vis_mhsat_sum, aes(x = ServSat, y = Sat_val, fill = Service)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    geom_errorbar(aes(ymin = Sat_val - se, ymax = Sat_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    scale_fill_brewer(palette="YlOrBr") + ylim(0,4) + coord_flip() + 
+    labs(fill = "是否使用过\n心理支持", x = "对应选项", y = "0（无影响），4（非常有影响）", title = "心理支持满意度影响因素") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=TRUE))
+
+
+data_vis_mhsat_sum1 <- data_summary(data_vis_mhsat, varname= "Sat_val", groupnames=c("ServSat", "gpa_grp"))%>% drop_na()
+
+plot41 <- ggplot(data_vis_mhsat_sum1, aes(x = ServSat, y = Sat_val, fill = gpa_grp)) + 
+    geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+    geom_errorbar(aes(ymin = Sat_val - se, ymax = Sat_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
+    scale_fill_brewer(palette="YlOrBr") + ylim(0,4) +  
+    labs(fill = "GPA分组", x = "对应选项", y = "0（无影响），4（非常有影响）", title = "心理支持满意度影响因素（GPA分组）") + 
+    theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+    guides(fill = guide_legend(reverse=FALSE))
+
+plot41
+
+```

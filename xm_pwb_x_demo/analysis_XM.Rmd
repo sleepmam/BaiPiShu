@@ -3,8 +3,9 @@ title: "baipishu"
 author: "marshall ma"
 date: "7/10/2020"
 output:
-  word_document: default
   html_document: default
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,12 +13,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r tools, include=FALSE}
 #manipulation and cleaning
-library(dplyr)
 library(tidyr)
 library(plyr)
 library(stringr)
 library(lubridate)
 library(data.table)
+library(dplyr)
 
 #visualization
 library(psych)
@@ -27,70 +28,23 @@ library(ggcorrplot)
 library(ggplot2)
 ```
 ```{r import, include=FALSE}
-data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0722.csv", comment.char="#", encoding = "UTF-8")
+data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728pm.csv", comment.char="#", encoding = "UTF-8")
 
 head(data)
 ```
 
 
-##Stage I: Filtering
-1. 时间低于10分钟。   
-2. PSS: 所有题目得分一致。  
-3. PHQ第10题和前9题逻辑不一致。  
-4. 没有使用心理咨询等服务却选了满意度（没有选“不适用”）。  
-```{r filter, include=FALSE}
 
-#look at distribution of time complete
-#x <- data[which(data$TimeComplete < 2000),]
-#ggplot(x, aes(x = TimeComplete)) + geom_histogram(bins = 40)+ geom_vline(xintercept = 600)
-
-
-head(data)
-summary(check1$qc_idx)
-check1 <- data %>%
-  mutate(
-    qc_idx = 0, #set initial value
-    qc_idx = ifelse(TimeComplete < 600, qc_idx + 1, qc_idx))
-which(check1$TimeComplete < 600)
-
-check <- data %>%
-  mutate(
-    qc_idx = 0, #set initial value
-    
-    #total time length
-    qc_idx = ifelse(TimeComplete < 600, qc_idx + 1, qc_idx),
-    
-    #wrong pattern of PHQ
-    qc_idx = ifelse(PHQ_sum == 0 & PHQ10 != 999, qc_idx + 1, qc_idx),
-    qc_idx = ifelse(PHQ_sum > 0 & PHQ10 == 999, qc_idx + 1, qc_idx),
-    
-    #wrong pattern of PSS
-    PSS_dif = (PSS1 + PSS2 + PSS3 + PSS4 + PSS5 + PSS6) / 6 - (PSS7 + PSS8 + PSS9 + PSS10) / 4,
-    qc_idx = ifelse(abs(PSS_dif - mean(PSS_dif)) > 3*sd(PSS_dif), qc_idx + 0.5, qc_idx),
-    
-    #violate MH usage and satisfaction
-    qc_idx = ifelse(Service == 2 & (ServSat_Med + ServSat_Ind + ServSat_Grp + ServSat_Inp + ServSat_Cri > 0) , qc_idx + 1, qc_idx)
-         ) 
-#%>%
-  #filter(qc_idx < 2) #can adjust
-
-summary(check$qc_idx)
-which(check$qc_idx > 0)
-#vis_miss(data)
-#data <- check
-```
-
-
-```{r transformation, include=FALSE}
+```{r transformation, echo=FALSE}
 data_vis <- data %>% 
   mutate(age_grp = ifelse(Age >= 25, "25+", "below25"), 
          gender_grp = ifelse(Gender == 1, "Male", 
                       ifelse(Gender == 2, "Female", 
-                      ifelse(Gender < 667, "Spectrum", NA))), 
-         degree_grp = ifelse(Degree == 1, "本科", 
-                      ifelse(Degree == 2, "硕士", 
-                      ifelse(Degree == 3, "MBA", 
-                      ifelse(Degree == 4, "博士", NA)))),
+                      ifelse(Gender < 667, "Non-binary", NA))), 
+         degree_grp = ifelse(Degree == 1, "a.UnderGrad", 
+                      ifelse(Degree == 2, "b.Master", 
+                      ifelse(Degree == 3, "d.MBA", 
+                      ifelse(Degree == 4, "c.PhD", NA)))),
          religion_grp = ifelse(Religion %in% c(1,2,3,4,5), "教", 
                       ifelse(Religion == 6, "无宗教信仰", NA)),
          gpa_grp = ifelse(GPA == 1, "a.3.8+", 
@@ -103,6 +57,15 @@ data_vis <- data %>%
                       ifelse(GradeChange == 3, "c不变", 
                       ifelse(GradeChange == 4, "d变差", 
                       ifelse(GradeChange == 5, "e明显变差", NA))))),
+         sex_o_grp = ifelse(SexOrient == 1, "a异性恋", 
+                      ifelse(SexOrient == 2, "b同性恋", 
+                      ifelse(SexOrient == 3, "c双性恋", 
+                      ifelse(SexOrient == 4, "d泛性恋", 
+                      ifelse(SexOrient == 5, "e无性恋", "其他/不想回答"))))),
+         visa_grp = ifelse(Visa == 1, "a绿卡", 
+                      ifelse(Visa == 2, "b学生", 
+                      ifelse(Visa == 3, "c工作转换", "其他/不想回答"))), 
+         sib_grp = ifelse(Sibling == 0, "a独生子女", "b非独生"), 
          
          MEMS_3 = MEMS1 + MEMS2 + MEMS3,
          
@@ -111,193 +74,234 @@ data_vis <- data %>%
          ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "beforeICE", 
                ifelse(time_new >= as.Date("2020-07-14 05"), "postICE", "duringICE"))
         ) 
-```
-
-##Stage II: Overview
-      |  demo   |   MH exp |
-PWB   |   x     |     x
-Latent|   x     |     x
-Spec  |   x     |     x
-MH exp|   x     |
-
-
-```{r practice}
 
 data_vis_pwb <- data_vis %>%
-  gather(PWB, PWB_val, PSS_sum:QLES_sum)
+  gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
 
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
-#ICE
-ggplot(data_vis, aes(y = PSS_sum, x = time_day, color = ICE)) + 
-  geom_count() + 
-  scale_size_area(max_size = 3) 
 
-table_test <- tableby(ICE ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_test, title = "test", text = TRUE)
+
+
+sum(data_vis$tui1_sch)/1222 #305 25%
+sum(data_vis$tui2_fam)/1222 #1101 90%
+sum(data_vis$tui3_gov)/1222 #18 1.5%
+sum(data_vis$tui4_in)/1222 #171 14%
+sum(data_vis$tui5_out)/1222 #84 7%
+sum(data_vis$tui6_other)/1222 #14 11.5%
+summary(as.factor(data_vis$tui_sum))  
+#73% (895) relies on singgle sources
+#  1   2   3   4   5 
+#895 215  88  16   8 
+nrow(data_vis)
+
+sum(data_vis$fin1_fam)/1222 #1088 89%
+sum(data_vis$fin2_gov)/1222 #25 2%
+sum(data_vis$fin3_in)/1222 #233 19%
+sum(data_vis$fin4_out)/1222 #132 11%
+sum(data_vis$fin5_other)/1222 #35 3%
+
+summary(as.factor(data_vis$fin_sum))  
+#80% (977) relies on single sources
+#  0   1   2   3   4   5 
+#  2 977 205  27  10   1
+
 
 ```
 
-```{r helper}
-
-data_summary <- function(data, varname, groupnames){
-  require(plyr)
-  summary_func <- function(x, col){
-    c(mean = mean(x[[col]], na.rm=TRUE),
-      sd = sd(x[[col]], na.rm=TRUE),
-      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
-  } #need to check se correctness
-  data_sum<-ddply(data, groupnames, .fun=summary_func,
-                  varname)
-  data_sum <- rename(data_sum, c("mean" = varname))
- return(data_sum)
-}
-
-#Error Bar
-data_vis_pwb_sum <- data_summary(data_vis_pwb, varname="PWB_val", groupnames=c("PWB", "ICE"))
-
-ggplot(data_vis_pwb_sum, aes(y = PWB_val, x = PWB, fill = ICE)) + 
-  geom_bar(stat="summary", position = "dodge", fun = mean) + 
-  scale_fill_brewer(palette="YlOrBr") +
-  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) 
-```
-
-
-```{r visulization}
-
-data_vis_short <- data_vis %>% select(PSS_sum, PHQ_sum, GAD_sum, SCOFF_nervosa, SWLS_sum, QLES_sum, GSE_sum, MEMS_3, SSSI_avg)
-
-
-#scaled plot
-(plot1 <- pairs.panels(data_vis_short,
-             method = "pearson", # correlation method
-             hist.col = "#00AFBB",
-             density = TRUE,  # show density plots
-             ellipses = TRUE # show correlation ellipses
-             ))
-
-corr <- cor(data_vis_short)
-(plot2 <- ggcorrplot(corr, method = "circle", type = "lower"))
-
-#gather and spread 
-
-(plot3 <- ggplot(data_vis_pwb, aes(x = PWB, y = PWB_val, fill = gpa_grp)) + geom_bar(position = "dodge", stat = "summary", fun = mean) + scale_fill_brewer(palette="Greys"))
-
-
-
-(plot4 <- ggplot(data_vis_lt, aes(x = Latent, y = Lt_val, fill = gpa_grp)) + geom_bar(stat="summary", position = "dodge", fun = mean) + scale_fill_brewer(palette="Set3"))
-```
-
-
-
-
-```{r archive,include=FALSE}
-#WARNING
-#Still need to provide input parameters such as what test to use and what stats to display
-
-#Part 0, summary stats PWB
-summary(data_vis$Service)
-table_0000 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
-summary(table_0000, title = "demo By Service", text = TRUE)
-
-
-table_y1 <- tableby(religion_grp ~ GAD_sum + PHQ_sum, data = data_vis)
-summary(table_y1, title = "demo By Service", text = TRUE)
-#age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp
-
-table_y2 <- tableby(GAD_sum ~ age_grp + gender_grp + degree_grp + religion_grp + gpa_grp + gpa_change_grp, data = data_vis)
-summary(table_y2, title = "demo By Service", text = TRUE)
-
-
-table_00 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_00, title = "PWB By Service", text = TRUE)
-
-
-table_01 <- tableby(age_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_01, title = "PWB By Age", text = TRUE)
-
-
-table_02 <- tableby(gender_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_02, title = "PWB By Gender", text = TRUE)
-
-
-table_03 <- tableby(degree_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_03, title = "PWB By Degree", text = TRUE)
-
-
-table_04 <- tableby(religion_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_04, title = "PWB By Religion", text = TRUE)
-
-
-table_05 <- tableby(gpa_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_05, title = "PWB By GPA", text = TRUE)
-
-
-table_06 <- tableby(gpa_change_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, data = data_vis)
-summary(table_06, title = "PWB By GPA(change)", text = TRUE)
-
-
-#-------------------------------------------------------
-#Part 1, summary stats for latent
-
-table_10 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_10, title = "Latent By Service", text = TRUE)
-
-table_11 <- tableby(age_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_11, title = "Latent By Age", text = TRUE)
-
-
-table_12 <- tableby(gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_12, title = "Latent By Gender", text = TRUE)
-
-
-table_13 <- tableby(degree_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_13, title = "Latent By Degree", text = TRUE)
-
-
-table_14 <- tableby(religion_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_14, title = "Latent By Religion", text = TRUE)
-
-
-table_15 <- tableby(gpa_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_15, title = "Latent By GPA", text = TRUE)
-
-
-table_16 <- tableby(gpa_change_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, data = data_vis)
-summary(table_16, title = "Latent By GPA(change)", text = TRUE)
-
-
-#-------------------------------------------------------
-#Part 2, specifics MEMS and SLASIA
-
-table_20 <- tableby(Service ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
-summary(table_20, title = "spec By Service", text = TRUE)
-
-table_21 <- tableby(age_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
-summary(table_21, title = "spec By Age", text = TRUE)
-
-
-table_22 <- tableby(gender_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
-summary(table_22, title = "spec By Gender", text = TRUE)
-
-
-table_23 <- tableby(degree_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
-summary(table_23, title = "spec By Degree", text = TRUE)
-
-
-table_24 <- tableby(religion_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
-summary(table_24, title = "spec By Religion", text = TRUE)
-
-
-table_25 <- tableby(gpa_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
-summary(table_25, title = "spec By GPA", text = TRUE)
-
-
-table_26 <- tableby(gpa_change_grp ~ SCOFF_binge + MEMS1 + MEMS2 + MEMS3 + MEMS4 + SLASIA1, data = data_vis)
-summary(table_26, title = "Latent By GPA(change)", text = TRUE)
+##Stage II: Overview    
+
+        | demo | Mh usage  |  
+--------|------|-----------|-----
+demo    | pt1  |-----------|-----
+MH use  | pt1  |-----------|-----
+PWB     | pt2  |---pt2-----|-----
+Latent  | pt3  |---pt2-----|-----
+Sat     | pt4  |---pt4-----|-----
+
+
+
+Part 1. Demo  
+- Summary stats of MH usage by Demo
+- Need some finance info
+```{r demo by service, include = FALSE}
+
+my_controls <- tableby.control(
+  test = T,
+  total = T,
+  numeric.test = "anova",
+  cat.test = "chisq",
+  cat.stats = c("countpct", "Nmiss2"),
+  stats.labels = list(Nmiss2 = "Missing")
+)
+
+table_00 <- tableby(~age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
+                    data = data_vis,
+                    control = my_controls)
+
+table_10 <- tableby(Service ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
+                    data = data_vis,
+                    control = my_controls)
+
+my_labels <- list(
+  age_grp = "年龄分组",
+  gender_grp = "性别分组",
+  degree_grp = "学位分组",
+  religion_grp = "宗教分组",
+  sex_o_grp = "性取向分组",
+  sib_grp = "独生子女分组",
+  visa_grp = "身份分组",
+  gpa_grp = "成绩分组",
+  gpa_change_grp = "成绩变化分组"
+)
 
 ```
 
+```{r demo}
+summary(table_00, title = "demo only", labelTranslations = my_labels, text = TRUE)
+summary(table_10, title = "demo By Service", labelTranslations = my_labels, text = TRUE)
+
+```
+
+Part 2. MH usage by PWB + Latent
+```{r PWB prep, include = FALSE}
+
+my_controls_pwb <- tableby.control(
+  test = T,
+  total = T,
+  numeric.test = "anova",
+  numeric.stats = c("meansd"),
+  cat.stats = c("countpct", "Nmiss2"),
+  stats.labels = list(
+    meansd = "Mean (SD)"
+  ))
+
+my_labels_pwb <- list(
+  PHQ_sum = "抑郁指数",
+  GAD_sum = "焦虑指数",
+  PSS_sum = "压力指数",
+  SWLS_sum = "生活满意度",
+  QLES_sum = "生活质量",
+  SCOFF_nervosa = "厌食指数"
+)
+table_20 <- tableby(Service ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
+                    control = my_controls_pwb,
+                    data = data_vis)
+table_21 <- tableby(Service ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
+                    control = my_controls_pwb,
+                    data = data_vis)
+```
+
+```{r PWB}
+
+summary(table_20, 
+        title = "PWB By Service", 
+        labelTranslations = my_labels_pwb,
+        text = TRUE)
+summary(table_21, 
+        title = "Latent By Service", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+
+```
+Part 2 PWB across groups
+age_grp
+gender_grp
+degree_grp
+religion_grp
+sex_o_grp 
+sib_grp
+visa_grp
+gpa_grp
+gpa_change_grp
+
+```{r, include = FALSE}
+my_controls_pwb2 <- tableby.control(
+  test = T,
+  total = T,
+  numeric.test = "anova",
+  numeric.stats = c("meansd"),
+  cat.stats = c("countpct", "Nmiss2"),
+  stats.labels = list(
+    meansd = "Mean (SD)"
+  ))
+
+#summary stats -> too many groups
+table_22 <- tableby(
+  sex_o_grp ~ PHQ_sum + GAD_sum + PSS_sum + SWLS_sum + QLES_sum + SCOFF_nervosa, 
+  control = my_controls_pwb2,
+  data = data_vis
+  )
+```
+
+```{r PWB across grps}
+summary(table_22, 
+        title = "PWB By Demo - Sex Orient", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+```
+
+Part 3 Latent across grps
+
+```{r, include = FALSE}
+table_30 <- tableby(
+  gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
+  control = my_controls_pwb2,
+  data = data_vis
+  )
+
+```
+
+```{r Lt across grps}
+summary(table_30, 
+        title = "Latent By Gender", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+```
+
+Part 4 fun
+```{r, include = FALSE}
+
+my_labels_mhs <- list(
+  ServSat1 = "1.咨询疗效", 
+  ServSat2 = "2.理解倾听", 
+  ServSat3 = "3.保密性", 
+  ServSat4 = "4.手续简明", 
+  ServSat5 = "5.良好沟通", 
+  ServSat6 = "6.尊重我", 
+  ServSat7 = "7.语言", 
+  ServSat8 = "8.时间冲突", 
+  ServSat9 = "9.文化适配"
+)
+
+table_40 <- tableby(Service ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, 
+                    data = data_vis)
+
+table_41 <- tableby(gender_grp ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, 
+                    data = data_vis)
+
+table_42 <- tableby(degree_grp ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, 
+                    data = data_vis)
+
+#table_43 <- tableby(gpa_grp ~ ServSat1 + ServSat2 + ServSat3 + ServSat4 + ServSat5 + ServSat6 + ServSat7 + ServSat8 + ServSat9, data = data_vis)
+```
+
+```{r part 4 mh sat}
+summary(table_40, 
+        title = "Satisfaction By Service", 
+        labelTranslations = my_labels_mhs,
+        text = TRUE)
+
+summary(table_41, 
+        title = "Satisfaction By Gender", 
+        labelTranslations = my_labels_mhs,
+        text = TRUE)
+
+summary(table_42, 
+        title = "Satisfaction By Degree", 
+        labelTranslations = my_labels_mhs,
+        text = TRUE)
 
 
+```
