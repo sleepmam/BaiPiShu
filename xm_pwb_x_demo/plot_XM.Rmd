@@ -83,7 +83,37 @@ data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
 
+tui_df <- data.frame(tui_grp=c("a.学费减免/奖学金", "b.家庭/父母", "c.国内政府支付", "d.学校内工作", "e.学校外工作", "f.其他"),
+                tui_val=c(305, 1101, 18, 171, 84, 14))
 
+(p<-ggplot(data=tui_df, aes(x=tui_grp, y=tui_val)) +
+  geom_bar(stat="identity", fill = "#56B4E9") + 
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(x = "学费支付来源", y = "对应人数", title = "学费支付来源统计") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  geom_text(aes(label=tui_val), vjust=-0.3, size=5))
+
+
+
+fin_df <- data.frame(fin_grp=c("a.家庭/父母", "b.国内政府支付", "c.学校内工作", "d.学校外工作", "e.其他"),
+                fin_val=c(1088, 25, 233, 132, 35))
+
+(p<-ggplot(data=fin_df, aes(x=fin_grp, y=fin_val)) +
+  geom_bar(stat="identity", fill = "#56B4E9") + 
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(x = "国外生活经济来源", y = "对应人数", title = "国外生活经济来源统计") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  geom_text(aes(label=fin_val), vjust=-0.3, size=5))
+
+
+
+sum(data_vis$fin1_fam)/1222 #1088 89%
+sum(data_vis$fin2_gov)/1222 #25 2%
+sum(data_vis$fin3_in)/1222 #233 19%
+sum(data_vis$fin4_out)/1222 #132 11%
+sum(data_vis$fin5_other)/1222 #35 3%
+
+summary(as.factor(data_vis$fin_sum))  
 
 ```
 
@@ -107,18 +137,6 @@ gpa_grp
 gpa_change_grp
 
 ```{r ICE check}
-
-my_controls <- tableby.control(
-  test = T,
-  total = T,
-  cat.test = "chisq",
-  cat.stats = c("countpct", "Nmiss2"),
-  stats.labels = list(Nmiss2 = "Missing")
-)
-table_10 <- tableby(ICE ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
-                    data = data_vis,
-                    control = my_controls)
-summary(table_10, title = "demo by ICE", text = TRUE)
 
 
 ```
@@ -148,9 +166,8 @@ plot32 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = degree_grp)
   scale_fill_brewer(palette="YlOrBr") +
   labs(fill = "学历", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
   theme(text = element_text(family='STKaiti', size=14, face="bold")) +
-  guides(fill = guide_legend(reverse=TRUE)) + 
-  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) + 
-  guides(fill = guide_legend(reverse=FALSE))
+  guides(fill = guide_legend(reverse=FALSE)) + 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) 
 plot32
 
 
@@ -214,6 +231,23 @@ data_vis_mhsat$ServSat <- recode_factor(data_vis_mhsat$ServSat, 'ServSat1' = "1.
 ```
 
 ```{r part 4 mh sat}
+
+
+
+
+
+data_summary <- function(data, varname, groupnames){
+  require(plyr)
+  summary_func <- function(x, col){
+    c(mean = mean(x[[col]], na.rm=TRUE),
+      sd = sd(x[[col]], na.rm=TRUE),
+      se = sqrt(var(x[[col]], na.rm=TRUE) / length(x[[col]])))
+  } #need to check se correctness
+  data_sum<-ddply(data, groupnames, .fun=summary_func,
+                  varname)
+  data_sum <- rename(data_sum, c("mean" = varname))
+ return(data_sum)
+}
 
 
 
