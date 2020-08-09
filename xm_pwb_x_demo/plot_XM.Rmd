@@ -82,41 +82,36 @@ data_vis_pwb <- data_vis %>%
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
+```
+
+
+```{r finance}
+
 
 tui_df <- data.frame(tui_grp=c("a.学费减免/奖学金", "b.家庭/父母", "c.国内政府支付", "d.学校内工作", "e.学校外工作", "f.其他"),
                 tui_val=c(305, 1101, 18, 171, 84, 14))
 
-(p<-ggplot(data=tui_df, aes(x=tui_grp, y=tui_val)) +
+p<-ggplot(data=tui_df, aes(x=tui_grp, y=tui_val)) +
   geom_bar(stat="identity", fill = "#56B4E9") + 
   scale_fill_brewer(palette="YlOrBr") +
   labs(x = "学费支付来源", y = "对应人数", title = "学费支付来源统计") + 
   theme(text = element_text(family='STKaiti', size=14, face="bold")) +
-  geom_text(aes(label=tui_val), vjust=-0.3, size=5))
+  geom_text(aes(label=tui_val), vjust=-0.3, size=5)
 
 
 
 fin_df <- data.frame(fin_grp=c("a.家庭/父母", "b.国内政府支付", "c.学校内工作", "d.学校外工作", "e.其他"),
                 fin_val=c(1088, 25, 233, 132, 35))
 
-(p<-ggplot(data=fin_df, aes(x=fin_grp, y=fin_val)) +
+p<-ggplot(data=fin_df, aes(x=fin_grp, y=fin_val)) +
   geom_bar(stat="identity", fill = "#56B4E9") + 
   scale_fill_brewer(palette="YlOrBr") +
   labs(x = "国外生活经济来源", y = "对应人数", title = "国外生活经济来源统计") + 
   theme(text = element_text(family='STKaiti', size=14, face="bold")) +
-  geom_text(aes(label=fin_val), vjust=-0.3, size=5))
+  geom_text(aes(label=fin_val), vjust=-0.3, size=5)
 
-
-
-sum(data_vis$fin1_fam)/1222 #1088 89%
-sum(data_vis$fin2_gov)/1222 #25 2%
-sum(data_vis$fin3_in)/1222 #233 19%
-sum(data_vis$fin4_out)/1222 #132 11%
-sum(data_vis$fin5_other)/1222 #35 3%
-
-summary(as.factor(data_vis$fin_sum))  
 
 ```
-
 ##Stage II: Overview    
 
 Part 1. Demo  
@@ -139,6 +134,20 @@ gpa_change_grp
 ```{r ICE check}
 
 
+my_sum <- data_vis_pwb %>%
+  group_by(PWB, time_day) %>%
+  summarise( 
+    n=n(),
+    mean=mean(PWB_val),
+    se=sd(PWB_val) / sqrt(n)
+  )  
+ head(my_sum)
+# Standard Error
+ggplot(my_sum, aes(x=time_day, y=mean, color = PWB)) +
+  #geom_bar( , stat="identity") +
+  geom_line(alpha = .5) + geom_point()+
+  geom_errorbar( aes(x=time_day, ymin=mean-se, ymax=mean+se), width=.1, alpha = .2) +
+  ggtitle("using standard error")
 ```
 
 ```{r PWB across grps, echo = FALSE}
