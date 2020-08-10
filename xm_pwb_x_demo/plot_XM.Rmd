@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r tools, include=FALSE}
 #manipulation and cleaning
 library(tidyr)
-library(plyr)
+#library(plyr)
 library(stringr)
 library(lubridate)
 library(data.table)
@@ -28,9 +28,10 @@ library(ggcorrplot)
 library(ggplot2)
 ```
 ```{r import, include=FALSE}
-data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728pm.csv", comment.char="#", encoding = "UTF-8")
-
+raw_data <- read.csv("~/Documents/2020_2Summer/research/0Yale2009/data/output/bps_df0722_xm0728pm.csv", comment.char="#", encoding = "UTF-8")
+data <- raw_data[,-c(1,2)]
 head(data)
+
 ```
 
 
@@ -75,6 +76,7 @@ data_vis <- data %>%
          ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "before", 
                ifelse(time_new >= as.Date("2020-07-14 05"), "after", "during"))
         ) 
+
 
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
@@ -135,7 +137,7 @@ gpa_change_grp
 
 
 my_sum <- data_vis_pwb %>%
-  group_by(PWB, time_day) %>%
+  group_by(PWB) %>%
   summarise( 
     n=n(),
     mean=mean(PWB_val),
@@ -143,10 +145,9 @@ my_sum <- data_vis_pwb %>%
   )  
  head(my_sum)
 # Standard Error
-ggplot(my_sum, aes(x=time_day, y=mean, color = PWB)) +
-  #geom_bar( , stat="identity") +
-  geom_line(alpha = .5) + geom_point()+
-  geom_errorbar( aes(x=time_day, ymin=mean-se, ymax=mean+se), width=.1, alpha = .2) +
+ggplot(my_sum, aes(x=PWB, y=mean, fill = PWB)) +
+  geom_bar(stat="identity") +
+  geom_errorbar( aes(x=PWB, ymin=mean-se, ymax=mean+se), width=.1, alpha = .2) +
   ggtitle("using standard error")
 ```
 
@@ -168,7 +169,7 @@ data_summary <- function(data, varname, groupnames){
 
 
 #degree by PWB
-data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "degree_grp"))  %>% drop_na()
+data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname = "PWB_val", groupnames=c("PWB", "degree_grp"))  %>% drop_na()
 
 plot32 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = degree_grp)) + 
   geom_bar(position = "dodge", stat = "summary", fun = mean) + 
