@@ -152,6 +152,7 @@ ggplot(my_sum, aes(x=PWB, y=mean, fill = PWB)) +
 ```
 
 ```{r PWB across grps, echo = FALSE}
+head(data_vis$Age)
 
 
 data_summary <- function(data, varname, groupnames){
@@ -169,9 +170,9 @@ data_summary <- function(data, varname, groupnames){
 
 
 #degree by PWB
-data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname = "PWB_val", groupnames=c("PWB", "degree_grp"))  %>% drop_na()
+data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname = "PWB_val", groupnames=c("PWB", "gender_grp"))  %>% drop_na()
 
-plot32 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = degree_grp)) + 
+plot32 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = gender_grp)) + 
   geom_bar(position = "dodge", stat = "summary", fun = mean) + 
   scale_fill_brewer(palette="YlOrBr") +
   labs(fill = "学历", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
@@ -184,10 +185,9 @@ plot32
 #fill with summary stats & error bar
 data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_sum' = "压力", 'PHQ_sum' = "焦虑", 'SWLS_sum' = "生活幸福感", 'QLES_sum' = "生活质量")
 
-
 data_vis_pwb_sum1 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gpa_grp"))  %>% drop_na()
 
-plot37 <- ggplot(data_vis_pwb_sum1, aes(x = PWB, y = PWB_val, fill = gpa_grp)) +
+plot37 <- ggplot(data_vis_pwb_sum1, aes(x = PWB, y = PWB_val, fill = gender_grp)) +
   geom_bar(position = "dodge", stat = "summary", fun = mean) +
   scale_fill_brewer(palette="YlOrBr") +
   labs(fill = "GPA分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩分组）") + 
