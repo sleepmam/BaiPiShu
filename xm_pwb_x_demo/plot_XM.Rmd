@@ -74,7 +74,8 @@ data_vis <- data %>%
          #sometime
          time_new = ymd_hms(TimeSubmit), time_day = as.Date(TimeSubmit),
          ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "before", 
-               ifelse(time_new >= as.Date("2020-07-14 05"), "after", "during"))
+               ifelse(time_new >= as.Date("2020-07-14 05"), "after", "during")),
+         substance = ifelse(SU1 > 0 | SU2 > 0 | SU3 > 0, "use", "not")
         ) 
 
 
@@ -84,6 +85,21 @@ data_vis_pwb <- data_vis %>%
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
+
+summary(as.factor(data_vis$SI1))
+#您是否有过自残的行为？1001 82% no, 145 12% yes, 76 6% wish not to answer
+#每十个回答者中就有至少一位
+#更何况，对于整个人群来说的一个数据点，对于那位曾经自我伤害的同学来说，这就是生活。希望ta们能找到相关的资源。
+summary(as.factor(data_vis$SI2))
+#在过去一年中，您自残行为有多频繁
+#1077 88% no, 117 10% yes, 27 2% often, 1 wish not to answer
+summary(as.factor(data_vis$SI3))
+summary(as.factor(data_vis$SI4))
+summary(as.factor(data_vis$SI5))
+summary(as.factor(data_vis$SI6))
+#answered yes, 53, 52, 40, 39, ~4%
+
+#加一个 《总的来说》
 ```
 
 
@@ -168,7 +184,45 @@ data_summary <- function(data, varname, groupnames){
  return(data_sum)
 }
 
+#degree by PWB
+data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname = "PWB_val", groupnames=c("PWB", "substance"))  %>% drop_na()
 
+plot00 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = substance)) + 
+  geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "Substance Use", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  guides(fill = guide_legend(reverse=FALSE)) + 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) 
+plot00
+
+data_vis_lt_sum0 <- data_summary(data_vis_lt, varname = "Lt_val", groupnames=c("Latent", "substance"))  %>% drop_na()
+
+plot00 <- ggplot(data_vis_lt_sum0, aes(x = Latent, y = Lt_val, fill = substance)) + 
+  geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "Substance Use", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  guides(fill = guide_legend(reverse=FALSE)) + 
+  geom_errorbar(aes(ymin = Lt_val - se, ymax = Lt_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) 
+plot00
+
+
+#------
+
+
+data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname = "PWB_val", groupnames=c("PWB", "CityType"))  %>% drop_na()
+
+plot00 <- ggplot(data_vis_pwb_sum0, aes(x = PWB, y = PWB_val, fill = as.factor(CityType))) + 
+  geom_bar(position = "dodge", stat = "summary", fun = mean) + 
+  scale_fill_brewer(palette="YlOrBr") +
+  labs(fill = "Substance Use", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按学历分组）") + 
+  theme(text = element_text(family='STKaiti', size=14, face="bold")) +
+  guides(fill = guide_legend(reverse=FALSE)) + 
+  geom_errorbar(aes(ymin = PWB_val - se, ymax = PWB_val + se), width = .1, alpha = 0.5, position = position_dodge(.9)) 
+plot00
+
+#----
 #degree by PWB
 data_vis_pwb_sum0 <- data_summary(data_vis_pwb, varname = "PWB_val", groupnames=c("PWB", "gender_grp"))  %>% drop_na()
 
@@ -185,9 +239,9 @@ plot32
 #fill with summary stats & error bar
 data_vis_pwb$PWB <- recode_factor(data_vis_pwb$PWB, 'GAD_sum' = "抑郁", 'PSS_sum' = "压力", 'PHQ_sum' = "焦虑", 'SWLS_sum' = "生活幸福感", 'QLES_sum' = "生活质量")
 
-data_vis_pwb_sum1 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "gpa_grp"))  %>% drop_na()
+data_vis_pwb_sum1 <- data_summary(data_vis_pwb, varname= "PWB_val", groupnames=c("PWB", "visa_grp"))  %>% drop_na()
 
-plot37 <- ggplot(data_vis_pwb_sum1, aes(x = PWB, y = PWB_val, fill = gender_grp)) +
+plot37 <- ggplot(data_vis_pwb_sum1, aes(x = PWB, y = PWB_val, fill = visa_grp)) +
   geom_bar(position = "dodge", stat = "summary", fun = mean) +
   scale_fill_brewer(palette="YlOrBr") +
   labs(fill = "GPA分组", x = "心理健康指标", y = "对应分数", title = "心理健康指标（按成绩分组）") + 
