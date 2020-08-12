@@ -246,11 +246,14 @@ Part 3 Latent across grps
 
 ```{r, include = FALSE}
 table_30 <- tableby(
-  gender_grp ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
+  as.factor(SI5) ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
   control = my_controls_pwb2,
   data = data_vis
   )
-
+summary(table_30, 
+        title = "Latent By Gender", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
 ```
 
 ```{r Lt across grps}
