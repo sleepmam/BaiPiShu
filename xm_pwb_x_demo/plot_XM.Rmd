@@ -76,11 +76,19 @@ data_vis <- data %>%
          ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "before", 
                ifelse(time_new >= as.Date("2020-07-14 05"), "after", "during")),
          substance = ifelse(SU1 > 0 | SU2 > 0 | SU3 > 0, "use", "not"),
-         yr_ab = ifelse(YearAbroad < 3, "initial", 
-                 ifelse(YearAbroad < 7, "medium", "long"))
+         yr_ab = ifelse(YearAbroad < 3, "a.initial", 
+                 ifelse(YearAbroad < 7, "b.medium", "c.long"))
         ) 
 
 #check the demo of these groups first
+
+table_30 <- tableby(
+  as.factor(yr_ab) ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
+  data = data_vis
+  )
+summary(table_30, 
+        title = "Latent By Gender", 
+        text = TRUE)
 #then look at psych well being and latent?
 
 summary(as.factor(data_vis$YearAbroad))
