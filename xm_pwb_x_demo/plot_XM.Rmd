@@ -75,10 +75,15 @@ data_vis <- data %>%
          time_new = ymd_hms(TimeSubmit), time_day = as.Date(TimeSubmit),
          ICE = ifelse(time_new <= as.POSIXct("2020-07-06 05"), "before", 
                ifelse(time_new >= as.Date("2020-07-14 05"), "after", "during")),
-         substance = ifelse(SU1 > 0 | SU2 > 0 | SU3 > 0, "use", "not")
+         substance = ifelse(SU1 > 0 | SU2 > 0 | SU3 > 0, "use", "not"),
+         yr_ab = ifelse(YearAbroad < 3, "initial", 
+                 ifelse(YearAbroad < 7, "medium", "long"))
         ) 
 
+#check the demo of these groups first
+#then look at psych well being and latent?
 
+summary(as.factor(data_vis$YearAbroad))
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
 
