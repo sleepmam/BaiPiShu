@@ -106,8 +106,11 @@ summary(as.factor(data_vis$fin_sum))
 #80% (977) relies on single sources
 #  0   1   2   3   4   5 
 #  2 977 205  27  10   1
-
-
+summary(data_vis$SSSI_avg)
+nrow(data_vis)
+x <- data_vis %>% filter(MEMS_3 > 12)
+nrow(x)
+nrow(x) / nrow(data_vis)
 ```
 
 ##Stage II: Overview    
