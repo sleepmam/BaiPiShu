@@ -19,6 +19,8 @@ library(stringr)
 library(lubridate)
 library(data.table)
 library(dplyr)
+library(lazyeval)
+library(QuantPsyc)
 
 #visualization
 library(psych)
@@ -80,39 +82,34 @@ data_vis <- data %>%
                  ifelse(YearAbroad < 7, "b.medium", "c.long"))
         ) 
 
-#check the demo of these groups first
+data_vism <- data_vis %>%
+  mutate(MEMS_3 = MEMS_3 /3*5,
+         MEMS4 = MEMS4 *5,
+         m_search = (MEMS4 - mean(MEMS4))/sd(MEMS4),
+         m_pres = (MEMS_3 - mean(MEMS_3))/sd(MEMS_3),
+         high_lv = ifelse(MEMS4 > (mean(MEMS4) + sd(MEMS4)), "high",
+                   ifelse(MEMS4 < (mean(MEMS4) - sd(MEMS4)), "low", NA))
+         )
+data_vism_h <- data_vism %>% filter(high_lv == "high")
+a1 <- lm(SWLS_sum ~ m_pres, data = data_vism_h)
+summary(a1)
+coef(a1)
+data_vism_l <- data_vism %>% filter(high_lv == "low")
+a2 <- lm(SWLS_sum ~ m_pres, data = data_vism_l)
+summary(a2)
 
-table_30 <- tableby(
-  as.factor(yr_ab) ~ age_grp + gender_grp + degree_grp + religion_grp + sex_o_grp + sib_grp + visa_grp + gpa_grp + gpa_change_grp, 
-  data = data_vis
-  )
-summary(table_30, 
-        title = "Latent By Gender", 
-        text = TRUE)
-#then look at psych well being and latent?
-
-summary(as.factor(data_vis$YearAbroad))
-data_vis_pwb <- data_vis %>%
-  gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
-
-data_vis_lt <- data_vis %>%
-  gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
+aa <- moderate.lm(m_pres, m_search, SWLS_sum, data_vism, mc = TRUE)
+summary(aa)
 
 
-summary(as.factor(data_vis$SI1))
-#您是否有过自残的行为？1001 82% no, 145 12% yes, 76 6% wish not to answer
-#每十个回答者中就有至少一位
-#更何况，对于整个人群来说的一个数据点，对于那位曾经自我伤害的同学来说，这就是生活。希望ta们能找到相关的资源。
-summary(as.factor(data_vis$SI2))
-#在过去一年中，您自残行为有多频繁
-#1077 88% no, 117 10% yes, 27 2% often, 1 wish not to answer
-summary(as.factor(data_vis$SI3))
-summary(as.factor(data_vis$SI4))
-summary(as.factor(data_vis$SI5))
-summary(as.factor(data_vis$SI6))
-#answered yes, 53, 52, 40, 39, ~4%
+head(data_vism$m_pres)
+a <- lm(SWLS_sum ~ m_pres + m_search, data = data_vism)
 
-#加一个 《总的来说》
+summary(a)
+b <- lm(SWLS_sum ~ m_pres * m_search, data = data_vism)
+summary(b)
+
+anova(a, b)
 ```
 
 
