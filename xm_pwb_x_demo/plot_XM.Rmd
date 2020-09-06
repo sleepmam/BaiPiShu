@@ -82,6 +82,15 @@ data_vis <- data %>%
                  ifelse(YearAbroad < 7, "b.medium", "c.long"))
         ) 
 
+
+library(dplyr)
+head(data_vis$UniName_Other)
+data_vis$UniName <- as.character(data_vis$UniName)
+uni_ls <- data_vis %>% dplyr::select(UniName) %>% distinct()
+uni_lsx <- data_vis %>% dplyr::select(UniName_Other) %>% distinct()
+View(uni_ls)
+View(uni_lsx)
+
 data_vism <- data_vis %>%
   mutate(MEMS_3 = MEMS_3 /3*5,
          MEMS4 = MEMS4 *5,
