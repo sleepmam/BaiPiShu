@@ -78,10 +78,15 @@ data_vis <- data %>%
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
 
+
+
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
 
+ggplot(data_vis_pwb, aes(x=PWB_val, y=SSSI_avg)) +
+  geom_point(stat="identity", alpha = 0.3) +
+  ggtitle("using standard error") + facet_grid(~PWB)
 
 
 sum(data_vis$tui1_sch)/1222 #305 25%
