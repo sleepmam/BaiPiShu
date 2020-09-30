@@ -68,6 +68,7 @@ data_vis <- data %>%
          sib_grp = ifelse(Sibling == 0, "a独生子女", "b非独生"), 
          
          MEMS_3 = MEMS1 + MEMS2 + MEMS3,
+         SSSI_sum = SSSI1 + SSSI2 + SSSI3 + SSSI4 + SSSI5 + SSSI6 + SSSI7 + SSSI8 + SSSI9 + SSSI10,
          
          #sometime
          time_new = ymd_hms(TimeSubmit), time_day = as.Date(TimeSubmit),
@@ -83,39 +84,81 @@ data_vis_pwb <- data_vis %>%
 data_vis_lt <- data_vis %>%
   gather(Latent, Lt_val, c(ERQ_reap:MEMS, SSSI_avg))
 
+```
+
+
+```{r lm}
 
 ggplot(data_vis_pwb, aes(x=PWB_val, y=SSSI_avg)) +
   geom_point(stat="identity", alpha = 0.3) +
   ggtitle("using standard error") + facet_grid(~PWB)
 
+datalm_demo <- data_vis %>% select(
+  Gender, Degree, YearAbroad, CityType, GradeChange, GPA
+)
+datalm_quan <- data_vis %>% 
+  select(Age, PSS_sum, PHQ_sum, GAD_sum, SWLS_sum, QLES_sum, ERQ_reap, ERQ_sup, GSE_sum, MEMS_3, MEMS4, SSSI_sum) %>% 
+  mutate_all(scale)
 
-sum(data_vis$tui1_sch)/1222 #305 25%
-sum(data_vis$tui2_fam)/1222 #1101 90%
-sum(data_vis$tui3_gov)/1222 #18 1.5%
-sum(data_vis$tui4_in)/1222 #171 14%
-sum(data_vis$tui5_out)/1222 #84 7%
-sum(data_vis$tui6_other)/1222 #14 11.5%
-summary(as.factor(data_vis$tui_sum))  
-#73% (895) relies on singgle sources
-#  1   2   3   4   5 
-#895 215  88  16   8 
-nrow(data_vis)
+datalm <- cbind(datalm_demo, datalm_quan)
+datalm <- datalm %>% na.omit()
 
-sum(data_vis$fin1_fam)/1222 #1088 89%
-sum(data_vis$fin2_gov)/1222 #25 2%
-sum(data_vis$fin3_in)/1222 #233 19%
-sum(data_vis$fin4_out)/1222 #132 11%
-sum(data_vis$fin5_other)/1222 #35 3%
+head(datalm)
 
-summary(as.factor(data_vis$fin_sum))  
-#80% (977) relies on single sources
-#  0   1   2   3   4   5 
-#  2 977 205  27  10   1
-summary(data_vis$SSSI_avg)
-nrow(data_vis)
-x <- data_vis %>% filter(MEMS_3 > 12)
-nrow(x)
-nrow(x) / nrow(data_vis)
+bps1 <- lm(SWLS_sum ~ Gender + Degree+  YearAbroad+  CityType+  GradeChange+  GPA+  Age+ ERQ_reap+  ERQ_sup+  GSE_sum+  MEMS_3+  MEMS4+  SSSI_sum, data = datalm)
+summary(bps1)
+anova(bps1)
+
+bps2 <- update(bps1, .~ . - YearAbroad - MEMS4)
+anova(bps1, bps2)
+summary(bps2)
+anova(bps2)
+
+bps3 <- update(bps2, .~ .  - Gender)
+anova(bps2, bps3)
+summary(bps3)
+anova(bps3)
+
+bps4 <- update(bps3, . ~ .  - GPA)
+anova(bps3, bps4)
+summary(bps4)
+anova(bps4)
+
+bps5 <- update(bps4, . ~ . - CityType)
+anova(bps4, bps5)
+summary(bps5)
+anova(bps5)
+
+bps6 <- update(bps5, . ~ . - GradeChange)
+anova(bps6, bps5)
+summary(bps6)
+anova(bps6)
+
+bps7 <- update(bps6, . ~ . - ERQ_sup)
+anova(bps6, bps7)
+summary(bps7)
+anova(bps7)
+
+cor(datalm$PHQ_sum, datalm$GAD_sum)
+
+b1 <- lm(PHQ_sum ~ Gender + Degree+  YearAbroad+  CityType+  GradeChange+  GPA+  Age+ ERQ_reap+  ERQ_sup+  GSE_sum+  MEMS_3+  MEMS4+  SSSI_sum, data = datalm)
+summary(b1)
+anova(b1)
+
+b2 <- update(b1, .~ . - CityType - Gender  - MEMS4)
+anova(b2, b1)
+summary(b2)
+anova(b2)
+
+b3 <- update(b2, .~ . - Age - GPA - YearAbroad)
+anova(b2, b3)
+summary(b3)
+anova(b3)
+
+b4 <- update(b3, .~ . - Degree  - GradeChange)
+anova(b4, b3)
+summary(b4)
+anova(b4)
 ```
 
 ##Stage II: Overview    
