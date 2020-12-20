@@ -76,6 +76,13 @@ data_vis <- data %>%
                ifelse(time_new >= as.Date("2020-07-14 05"), "postICE", "duringICE"))
         ) 
 
+
+
+mean(data_vis$SWLS_sum)
+sd(data_vis$SWLS_sum)
+mean(data_vis$MEMS4)
+sd(data_vis$MEMS4)
+
 data_vis_pwb <- data_vis %>%
   gather(PWB, PWB_val, c(PSS_sum:GAD_sum, QLES_sum, SWLS_sum))
 
