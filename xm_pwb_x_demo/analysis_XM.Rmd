@@ -303,6 +303,28 @@ summary(table_22,
 Part 3 Latent across grps
 
 ```{r, include = FALSE}
+
+a <- data_vis %>%
+  mutate(s_emoinfo = (SSSI1 + SSSI2 + SSSI3 + SSSI4)/4,
+         s_aff = (SSSI5 + SSSI6 + SSSI7)/3,
+         s_tang = SSSI8,
+         s_lifeint = (SSSI9 + SSSI10)/2
+         )
+
+
+table_50 <- tableby(
+  as.factor(SI5) ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg + s_emoinfo + s_aff + s_tang + s_lifeint, 
+  control = my_controls_pwb2,
+  data = a
+  )
+summary(table_50, 
+        title = "Social By SI", 
+        labelTranslations = my_labels_pwb, 
+        text = TRUE)
+
+
+
+
 table_30 <- tableby(
   as.factor(SI5) ~ ERQ_reap + ERQ_sup + GSE_sum + MEMS + SSSI_avg, 
   control = my_controls_pwb2,
@@ -366,3 +388,4 @@ summary(table_42,
 
 
 ```
+
